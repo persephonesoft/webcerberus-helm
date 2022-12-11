@@ -1,0 +1,248 @@
+# Default values for psnservice.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+fullnameOverride: psnservice
+nameSpace: persephone
+
+replicaCount: 1
+
+
+## Configure Pods Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+## @param podSecurityContext.enabled Enabled ZooKeeper pods' Security Context
+## @param podSecurityContext.fsGroup Set ZooKeeper pod's Security Context fsGroup
+##
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+## Configure Container Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+## @param containerSecurityContext.enabled Enabled ZooKeeper containers' Security Context
+## @param containerSecurityContext.runAsUser Set ZooKeeper containers' Security Context runAsUser
+## @param containerSecurityContext.runAsNonRoot Set ZooKeeper containers' Security Context runAsNonRoot
+## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
+##
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+persistence:
+  enabled: true
+  existingClaim: false
+
+ingresses:
+  cerberus:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/proxy-buffering: "on"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    serviceName: psnservice
+    servicePort: 80
+    path: /
+    hosts:
+      - webcerberus.ykspace.org
+    # tls:
+    #   - secretName: <tsl-certificate-secret>
+    #     hosts:
+    #       - <sts-domain-name>
+
+env:
+  ENVPSN_MariaDB_ConnectionString: 'root/MySecret1@psnmariadb:3306/persephone'
+  ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
+  ENVPSN_Solr_CoreName: 'persephone'
+  ENVPSN_Blast_DB: '/opt/app/data/BlastDB/openplants'
+  ENVPSN_Blast_ProgramDirectory: '/opt/app/data/Blast/bin'
+  ENVPSN_User_Data_Directory: '/opt/app/data/DataUsers'
+  ENVPSN_File_Storage_Path: '/opt/app/data/FileStorage'
+  ENVPSN_Sequence_Storage_Path: '/opt/app/data/SequenceStorage'
+  ENVPSN_Temp_Directory: '/tmp'
+
+webcerberus:
+  image:
+    repository: psnservice.webcerberus
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  deployment:
+    containerPort: 8080
+
+  probes:
+    liveness:
+      enabled: false
+      path: /_healthcheck
+      initialDelaySeconds: 0 # Defaults to 0 seconds. Minimum value is 0.  Used default value in order to have posibility to ovveride is neccesary
+      periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+      timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+      successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+      failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+    readiness:
+      enabled: false
+      path: /_healthcheck
+      initialDelaySeconds: 5 # Defaults to 0 seconds. Minimum value is 0.
+      periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+      timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+      successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+      failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+
+persephoneshell:
+  image:
+    repository: psnservice.persephoneshell
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  deployment:
+    containerPort: 80
+
+  probes:
+    liveness:
+      enabled: false
+      path: /_healthcheck
+      initialDelaySeconds: 0 # Defaults to 0 seconds. Minimum value is 0. Used default value in order to have posibility to ovveride is neccesary
+      periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+      timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+      successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+      failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+    readiness:
+      enabled: false
+      path: /_healthcheck
+      initialDelaySeconds: 5 # Defaults to 0 seconds. Minimum value is 0.
+      periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+      timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+      successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+      failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+
+imagePullSecrets: []
+  # Optionally specify an array of imagePullSecrets.
+  # Secrets must be manually created in the namespace.
+  # ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  #
+  # This uses credentials from secret "myRegistryKeySecretName".
+  # - name: myRegistryKeySecretName
+
+service:
+  type: ClusterIP
+  port: 80
+
+deployment:
+  containerPort: 80
+
+serviceAccount:
+  enable: false
+
+probes:
+  liveness:
+    enabled: false
+    path: /_healthcheck
+    initialDelaySeconds: 0 # Defaults to 0 seconds. Minimum value is 0. Used default value in order to have posibility to ovveride is neccesary
+    periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+    timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+    successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+    failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+  readiness:
+    enabled: false
+    path: /_healthcheck
+    initialDelaySeconds: 5 # Defaults to 0 seconds. Minimum value is 0.
+    periodSeconds: 30 # Default to 10 seconds. Minimum value is 1.
+    timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
+    successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+    failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+
+secrets: {}
+  # Optionally specify a set of secret objects whose values
+  # will be injected as environment variables by default.
+  # You should add this section to a file like secrets.yaml
+  # that is explicitly NOT committed to source code control
+  # and then include it as part of your helm install step.
+  # ref: https://kubernetes.io/docs/concepts/configuration/secret/
+  #
+  # This creates a secret "mysecret" and injects "mypassword"
+  # as the environment variable mysecret_mypassword=password.
+  # mysecret:
+  #   mypassword: password
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 500m
+  #  memory: 512Mi
+  # requests:
+  #  cpu: 200m
+  #  memory: 256Mi
+
+nodeSelector:
+    poolMode: System
+
+tolerations: []
+
+affinity: {}
+
+## @section Solr parameters
+##
+solr:
+  nameOverride: "solr"
+
+  ## Bitnami Solr image version
+  ## ref: https://hub.docker.com/r/bitnami/solr/tags
+  ## @param image.registry Solr image registry
+  ## @param image.repository Solr image repository
+  ## @param image.tag Solr image tag (immutable tags are recommended)
+  ## @param image.digest Solr image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
+  ## @param image.pullPolicy image pull policy
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  ## @param image.debug Specify if debug values should be set
+  ##
+  image:
+    registry: docker.io
+    repository: bitnami/solr
+    tag: 8.11.2-debian-11-r37
+
+  auth:
+    ## @param auth.enabled Enable Solr authentication
+    ##
+    enabled: false
+  ## @param coreNames Solr core names to be created
+  ##
+  coreNames:
+    - persephone
+  ## @param cloudEnabled Enable Solr cloud mode
+  ##
+  cloudEnabled: false
+  ## @param cloudBootstrap Enable cloud bootstrap. It will be performed from the node 0.
+  ##
+  cloudBootstrap: false
+  ## @param collectionShards Number of collection shards
+  ##
+  collectionShards: 1
+  ## @param collectionReplicas Number of collection replicas
+  ##
+  collectionReplicas: 1
+  ## @param replicaCount Number of solr replicas
+  ##
+  replicaCount: 1
+
+  zookeeper:
+    ## @param zookeeper.enabled Enable ZooKeeper deployment. Needed for Solr cloud
+    ##
+    enabled: false
+
+    ## @param zookeeper.replicaCount Number of ZooKeeper nodes
+    ##
+    replicaCount: 1
+
+ingress-nginx:
+  controller:
+    config:
+      large-client-header-buffers: 8 128k
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+{{- if .Values.serviceAccount.enable }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.fullnameOverride }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.serviceAccount.clusterRoleName }}
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.fullnameOverride }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

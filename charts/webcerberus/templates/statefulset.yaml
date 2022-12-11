@@ -1,0 +1,171 @@
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: {{ template "psnservice.fullname" . }}
+  namespace: {{ template "psnservice.namespace" . }}
+  labels:
+    app: {{ template "psnservice.name" . }}
+    chart: {{ template "psnservice.chart" . }}
+    release: {{ .Release.Name }}
+    environment: {{ .Values.environmentAlias | default "NDEF" | lower | quote }}
+    buildID: {{ .Values.buildID | default .Values.webcerberus.image.tag | quote }}
+    app.kubernetes.io/component: webcerberus
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ template "psnservice.fullname" . }}
+  {{- if .Values.updateStrategy }}
+  updateStrategy: {{- toYaml .Values.updateStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: webcerberus
+  template:
+    metadata:
+      labels:
+        app: {{ template "psnservice.name" . }}
+        release: {{ .Release.Name }}
+        app.kubernetes.io/component: webcerberus
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: volume-permissions
+          image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
+          imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
+          command:
+            - /bin/bash
+          args:
+            - -ec
+            - |
+              mkdir -p /opt/app/data/BlastDB
+              mkdir -p /opt/app/data/BlastDB/openplants
+              mkdir -p /opt/app/data/Blast
+              mkdir -p /opt/app/data/Blast/bin
+              mkdir -p /opt/app/data/DataUsers
+              mkdir -p /opt/app/data/FileStorage
+              mkdir -p /opt/app/data/SequenceStorage
+          volumeMounts:
+            - name: psn-data
+              mountPath: /opt/app/data
+      containers:
+        - name: webcerberus
+          image: "{{ .Values.webcerberus.image.repository }}:{{ .Values.webcerberus.image.tag }}"
+          imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
+          env:
+            - name: ENVPSN_MariaDB_ConnectionString
+              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
+            - name: ENVPSN_Solr_URL
+              value: {{ .Values.env.ENVPSN_Solr_URL }}
+            - name: ENVPSN_Solr_CoreName
+              value: {{ .Values.env.ENVPSN_Solr_CoreName }}
+            - name: ENVPSN_Blast_DB
+              value: {{ .Values.env.ENVPSN_Blast_DB }}
+            - name: ENVPSN_Blast_ProgramDirectory
+              value: {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
+            - name: ENVPSN_User_Data_Directory
+              value: {{ .Values.env.ENVPSN_User_Data_Directory }}
+            - name: ENVPSN_File_Storage_Path
+              value: {{ .Values.env.ENVPSN_File_Storage_Path }}
+            - name: ENVPSN_Sequence_Storage_Path
+              value: {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
+            - name: ENVPSN_Temp_Directory
+              value: {{ .Values.env.ENVPSN_Temp_Directory }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.webcerberus.deployment.containerPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: psn-data
+              mountPath: /opt/app/data
+          {{- if .Values.webcerberus.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.webcerberus.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.webcerberus.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webcerberus.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.webcerberus.probes.liveness.timeoutSeconds }}
+            successThreshold: {{ .Values.webcerberus.probes.liveness.successThreshold }}
+            failureThreshold: {{ .Values.webcerberus.probes.liveness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.webcerberus.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{.Values.webcerberus.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.webcerberus.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webcerberus.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.webcerberus.probes.readiness.timeoutSeconds }}
+            successThreshold: {{ .Values.webcerberus.probes.readiness.successThreshold }}
+            failureThreshold: {{ .Values.webcerberus.probes.readiness.failureThreshold }}
+          {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep","90"]
+        - name: persephoneshell
+          image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
+          imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
+          env:
+            - name: ENVPSN_MariaDB_ConnectionString
+              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
+            - name: ENVPSN_Solr_URL
+              value: {{ .Values.env.ENVPSN_Solr_URL }}
+            - name: ENVPSN_Solr_CoreName
+              value: {{ .Values.env.ENVPSN_Solr_CoreName }}
+            - name: ENVPSN_Blast_DB
+              value: {{ .Values.env.ENVPSN_Blast_DB }}
+            - name: ENVPSN_Blast_ProgramDirectory
+              value: {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
+            - name: ENVPSN_User_Data_Directory
+              value: {{ .Values.env.ENVPSN_User_Data_Directory }}
+            - name: ENVPSN_File_Storage_Path
+              value: {{ .Values.env.ENVPSN_File_Storage_Path }}
+            - name: ENVPSN_Sequence_Storage_Path
+              value: {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
+            - name: ENVPSN_Temp_Directory
+              value: {{ .Values.env.ENVPSN_Temp_Directory }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.persephoneshell.deployment.containerPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: psn-data
+              mountPath: /opt/app/data
+          {{- if .Values.persephoneshell.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.persephoneshell.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.persephoneshell.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.persephoneshell.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.persephoneshell.probes.liveness.timeoutSeconds }}
+            successThreshold: {{ .Values.persephoneshell.probes.liveness.successThreshold }}
+            failureThreshold: {{ .Values.persephoneshell.probes.liveness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.persephoneshell.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{.Values.persephoneshell.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.persephoneshell.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.persephoneshell.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.persephoneshell.probes.readiness.timeoutSeconds }}
+            successThreshold: {{ .Values.persephoneshell.probes.readiness.successThreshold }}
+            failureThreshold: {{ .Values.persephoneshell.probes.readiness.failureThreshold }}
+          {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep","90"]
+  volumeClaimTemplates:
+  - metadata:
+      name: psn-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: managed-csi
+      resources:
+        requests:
+          storage: 10Gi
