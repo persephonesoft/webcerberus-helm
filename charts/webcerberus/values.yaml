@@ -1,25 +1,33 @@
 # Default values for psnservice.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
+##
 fullnameOverride: psnservice
+
+## @param namespace The namespace in which the WebCerberus will be created
+##
 nameSpace: persephone
 
+## @param replicaCount Number of WebCerberus replicas
+## The replicas count is fixed and only 1 is applicable now
 replicaCount: 1
 
 
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-## @param podSecurityContext.enabled Enabled ZooKeeper pods' Security Context
-## @param podSecurityContext.fsGroup Set ZooKeeper pod's Security Context fsGroup
+## @param podSecurityContext.enabled Enabled WebCerberus pods' Security Context
+## @param podSecurityContext.fsGroup Set WebCerberus pod's Security Context fsGroup
 ##
 podSecurityContext:
   enabled: true
   fsGroup: 1001
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-## @param containerSecurityContext.enabled Enabled ZooKeeper containers' Security Context
-## @param containerSecurityContext.runAsUser Set ZooKeeper containers' Security Context runAsUser
-## @param containerSecurityContext.runAsNonRoot Set ZooKeeper containers' Security Context runAsNonRoot
+## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
+## @param containerSecurityContext.runAsUser Set WebCerberus containers' Security Context runAsUser
+## @param containerSecurityContext.runAsNonRoot Set WebCerberus containers' Security Context runAsNonRoot
 ## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
 ##
 containerSecurityContext:
@@ -28,9 +36,28 @@ containerSecurityContext:
   runAsNonRoot: true
   allowPrivilegeEscalation: false
 
+## @section Persistence parameters
+
+## Enable persistence using Persistent Volume Claims
+## ref: https://kubernetes.io/docs/user-guide/persistent-volumes/
+##
 persistence:
-  enabled: true
-  existingClaim: false
+  ## @param persistence.storageClass PVC Storage Class for WebCerberus data volume
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClassName: "default"
+  ## @param persistence.accessModes PVC Access modes
+  ##
+  accessModes:
+    - ReadWriteOnce
+  ## @param persistence.size PVC Storage Request for WebCerberus data volume
+  ##
+  size: 10Gi
+
 
 ingresses:
   cerberus:
@@ -44,15 +71,17 @@ ingresses:
     servicePort: 80
     path: /
     hosts:
-      - webcerberus.ykspace.org
+      - webcerberus.domain.org
     # tls:
     #   - secretName: <tsl-certificate-secret>
     #     hosts:
     #       - <sts-domain-name>
 
+## @param env.ENVPSN_Variable_Name with environment variables to add to WebCerberus node
+##
 env:
   ENVPSN_MariaDB_ConnectionString: 'root/MySecret1@psnmariadb:3306/persephone'
-  ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
+  ENVPSN_Solr_URL: 'http://psnservice-psnsolr:8983/solr'
   ENVPSN_Solr_CoreName: 'persephone'
   ENVPSN_Blast_DB: '/opt/app/data/BlastDB/openplants'
   ENVPSN_Blast_ProgramDirectory: '/opt/app/data/Blast/bin'
@@ -61,6 +90,8 @@ env:
   ENVPSN_Sequence_Storage_Path: '/opt/app/data/SequenceStorage'
   ENVPSN_Temp_Directory: '/tmp'
 
+## Section of the WebCerberus container parameters
+## 
 webcerberus:
   image:
     repository: psnservice.webcerberus
@@ -88,6 +119,8 @@ webcerberus:
       successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
       failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
 
+## Section of the PercephoneShell container parameters
+## 
 persephoneshell:
   image:
     repository: psnservice.persephoneshell
@@ -176,12 +209,19 @@ resources: {}
   #  cpu: 200m
   #  memory: 256Mi
 
-nodeSelector:
-    poolMode: System
 
-tolerations: []
-
+## @param affinity Affinity for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and nodeAffinityPreset will be ignored when it's set
+##
 affinity: {}
+## @param nodeSelector Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+## @param tolerations Tolerations for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
 
 ## @section Solr parameters
 ##
