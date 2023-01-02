@@ -81,7 +81,7 @@ ingresses:
 ##
 env:
   ENVPSN_MariaDB_ConnectionString: 'root/MySecret1@psnmariadb:3306/persephone'
-  ENVPSN_Solr_URL: 'http://psnservice-psnsolr:8983/solr'
+  ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
   ENVPSN_Solr_CoreName: 'persephone'
   ENVPSN_Blast_DB: '/opt/app/data/BlastDB/openplants'
   ENVPSN_Blast_ProgramDirectory: '/opt/app/data/Blast/bin'
