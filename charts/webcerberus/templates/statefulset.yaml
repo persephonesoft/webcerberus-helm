@@ -26,11 +26,6 @@ spec:
         release: {{ .Release.Name }}
         app.kubernetes.io/component: webcerberus
     spec:
-      volumes:
-        - name: webcerberus-license
-          configMap:
-            name: webcerberus-license
-            defaultMode: 420
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -140,9 +135,6 @@ spec:
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
-            - name: webcerberus-license
-              mountPath: /opt/app
-              subPath: webcerberus.lic
           {{- if .Values.persephoneshell.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
