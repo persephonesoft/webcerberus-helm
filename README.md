@@ -6,7 +6,7 @@ This Helm Chart has been configured to pull the Container Images from the Docker
 The following command allows you to download and install all the charts from this repository.
 
 ```console
-$ helm repo add my-repo https://ykjumper.github.io/webcerberus-helm/
+$ helm repo add my-repo https://persephonesoft.github.io/webcerberus-helm/
 $ helm install my-release persephone-helm/webcerberus
 ```
 
@@ -25,7 +25,7 @@ $ helm install my-release persephone-helm/webcerberus
  To install the chart with the release name `my-release`:
 
 ```console
-$ helm repo add my-repo https://ykjumper.github.io/webcerberus-helm/
+$ helm repo add my-repo https://persephonesoft.github.io/webcerberus-helm/
 $ helm repo update
 $ helm install my-release persephone-helm/webcerberus \
               --set ingress-nginx.controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"="/healthz" \
