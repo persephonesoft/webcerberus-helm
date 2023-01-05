@@ -96,7 +96,7 @@ webcerberus:
   image:
     repository: psnservice.webcerberus
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   deployment:
     containerPort: 8080
@@ -125,7 +125,7 @@ persephoneshell:
   image:
     repository: psnservice.persephoneshell
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   deployment:
     containerPort: 80
