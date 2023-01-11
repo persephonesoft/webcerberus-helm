@@ -14,6 +14,8 @@ nameSpace: persephone
 ## The replicas count is fixed and only 1 is applicable now
 replicaCount: 1
 
+## Container registry credential secret name
+imagePullSecrets: docker-registry-creds
 
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
