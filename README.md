@@ -59,7 +59,7 @@ As an option the secret can be created from the CLI using parameters provided by
 kubectl create secret docker-registry [secret-name] --docker-server=[your-registry-server] --docker-username=[your-name] --docker-password=[your-pword] --docker-email=[your-email] --namespace=[you-namespace]
 ```
 where:
- - [secret-name] is the secretname.
+ - [secret-name] is the secret name.
  - [your-registry-server] is your Private Docker Registry FQDN. Use https://index.docker.io/v1/ for DockerHub.
  - [your-name] is your Docker username.
  - [your-pword] is your Docker password.
