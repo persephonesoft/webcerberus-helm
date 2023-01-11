@@ -54,16 +54,18 @@ See parameters explanation in file webcerberus-helm\charts\webcerberus\values.ya
 ## How to create ImagePullSecret
 
 As an option the secret can be created from the CLI using parameters provided by the Persephonesoft
-
+```console
 kubectl create secret docker-registry regcred --docker-server=[your-registry-server] --docker-username=[your-name] --docker-password=[your-pword] --docker-email=[your-email] --namespace=[you-namespace]
-
+```
 where:
 
-[your-registry-server] is your Private Docker Registry FQDN. Use https://index.docker.io/v1/ for DockerHub.
-[your-name] is your Docker username.
-[your-pword] is your Docker password.
-[your-email] is your Docker email.
-[you-namespace] is Kubernetes namespace where you are running the application
+ - [your-registry-server] is your Private Docker Registry FQDN. Use https://index.docker.io/v1/ for DockerHub.
+ - [your-name] is your Docker username.
+ - [your-pword] is your Docker password.
+ - [your-email] is your Docker email.
+ - [you-namespace] is Kubernetes namespace where you are running the application
 
 Example:
+```console
 kubectl create secret docker-registry docker-registry-creds1 --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig --docker-email=imageowner@persephonesoft.com --namespace=persephone
+```
