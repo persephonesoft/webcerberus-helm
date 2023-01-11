@@ -14,9 +14,6 @@ nameSpace: persephone
 ## The replicas count is fixed and only 1 is applicable now
 replicaCount: 1
 
-## Container registry credential secret name
-imagePullSecrets: docker-registry-creds
-
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enabled WebCerberus pods' Security Context
@@ -155,8 +152,8 @@ imagePullSecrets: []
   # Secrets must be manually created in the namespace.
   # ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   #
-  # This uses credentials from secret "myRegistryKeySecretName".
-  # - name: myRegistryKeySecretName
+  # This uses credentials from secret "docker-registry-creds".
+  # - name: docker-registry-creds
 
 service:
   type: ClusterIP
