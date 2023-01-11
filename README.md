@@ -31,6 +31,7 @@ $ helm repo update
 $ helm install my-release persephone-helm/webcerberus \
               --set ingress-nginx.controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"="/healthz" \
               --set solr.collectionReplicas="1"
+              --set imagePullSecrets[0].name="image-pull-secret-name"
 ```
 
 These commands deploy WebCerberus the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -67,5 +68,5 @@ where:
 
 Example:
 ```console
-kubectl create secret docker-registry docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig --docker-email=imageowner@persephonesoft.com --namespace=persephone
+kubectl create secret docker-registry image-pull-secret-name --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig --docker-email=imageowner@persephonesoft.com --namespace=persephone
 ```
