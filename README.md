@@ -18,7 +18,7 @@ $ helm install my-release persephone-helm/webcerberus
 - ReadWriteMany volumes for deployment scaling
 - MariaDB database
 - Licence for WebCerberus application as Kubernetes configMap 'webcerberus-license'
-- Credentials for access to the private Docker.io repository provaded as the Kubernetes secret [See Pull an Image from a Private Registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-pod-that-uses-your-secret)
+- Credentials for access to the private Docker.io repository provided as the Kubernetes secret. See [Pull an Image from a Private Registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-pod-that-uses-your-secret)
 - (Optional) TLS Certificate for Ingress service
 
 ## Installing the Chart
@@ -67,5 +67,5 @@ where:
 
 Example:
 ```console
-kubectl create secret docker-registry docker-registry-creds1 --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig --docker-email=imageowner@persephonesoft.com --namespace=persephone
+kubectl create secret docker-registry docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig --docker-email=imageowner@persephonesoft.com --namespace=persephone
 ```
