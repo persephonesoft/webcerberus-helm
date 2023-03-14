@@ -71,7 +71,7 @@ Example:
 kubectl create secret docker-registry image-pull-secret-name \
   --docker-server=https://index.docker.io/v1/ \
   --docker-username=persephonesoft \
-  --docker-password=dckr_pat_0jhgy63jy7eynsoI2oeKi6DofTig \
-  --docker-email=imageowner@persephonesoft.com \
+  --docker-password=<dockrHubUserPassword> \
+  --docker-email=mkravchuk@persephonesoft.com \
   --namespace=persephone
 ```
