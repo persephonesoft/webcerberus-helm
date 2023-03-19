@@ -263,12 +263,12 @@ solr:
   replicaCount: 1
 
   resources:
-    limits:
-     cpu: 1500m
-     memory: 2512Mi
+    # limits:
+    #  cpu: 1500m
+    #  memory: 2512Mi
     requests:
-     cpu: 200m
-     memory: 256Mi
+     cpu: 500m
+     memory: 2256Mi
 
   zookeeper:
     ## @param zookeeper.enabled Enable ZooKeeper deployment. Needed for Solr cloud
