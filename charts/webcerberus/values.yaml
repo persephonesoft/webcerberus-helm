@@ -196,6 +196,10 @@ secrets: {}
   # mysecret:
   #   mypassword: password
 
+## @param resource.limits/requests for the Webcerberus application
+## The provided below limits/requests values are recomended for test purposes only.
+## Recomended minimum resource limits are 4 CPU and 16 GB of RAM.
+##
 resources:
   limits:
    cpu: 2000m
@@ -261,7 +265,7 @@ solr:
   ## @param replicaCount Number of solr replicas
   ##
   replicaCount: 1
-  ## @param resource.limits for the Persephone Solr service
+  ## @param solr.resource.limits/requests for the Persephone Solr service
   ## The provided below limits/requests values are recomended for using with Webcerberus apllication containing 100M units of data.
   ## One unit of data means one annotation or marker.
   ##
