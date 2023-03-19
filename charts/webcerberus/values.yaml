@@ -198,11 +198,11 @@ secrets: {}
 
 resources:
   limits:
-   cpu: 1500m
-   memory: 2512Mi
+   cpu: 2000m
+   memory: 2048Mi
   requests:
-   cpu: 200m
-   memory: 256Mi
+   cpu: 1000m
+   memory: 2048Mi
 
 
 ## @param affinity Affinity for pod assignment
@@ -261,14 +261,17 @@ solr:
   ## @param replicaCount Number of solr replicas
   ##
   replicaCount: 1
-
+  ## @param resource.limits for the Persephone Solr service
+  ## The provided below limits/requests values are recomended for using with Webcerberus apllication containing 100M units of data.
+  ## One unit of data means one annotation or marker.
+  ##
   resources:
-    # limits:
-    #  cpu: 1500m
-    #  memory: 2512Mi
+    limits:
+     cpu: 2000m
+     memory: 2048Mi
     requests:
-     cpu: 500m
-     memory: 2256Mi
+     cpu: 1000m
+     memory: 2048Mi
 
   zookeeper:
     ## @param zookeeper.enabled Enable ZooKeeper deployment. Needed for Solr cloud
