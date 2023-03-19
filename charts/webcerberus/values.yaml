@@ -198,8 +198,8 @@ secrets: {}
 
 resources:
   limits:
-   cpu: 500m
-   memory: 512Mi
+   cpu: 1500m
+   memory: 2512Mi
   requests:
    cpu: 200m
    memory: 256Mi
@@ -264,8 +264,8 @@ solr:
 
   resources:
     limits:
-     cpu: 500m
-     memory: 512Mi
+     cpu: 1500m
+     memory: 2512Mi
     requests:
      cpu: 200m
      memory: 256Mi
