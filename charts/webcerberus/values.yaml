@@ -120,7 +120,7 @@ webcerberus:
 
 ## Section of the PercephoneShell container parameters
 ## 
-# persephoneshell:
+persephoneshell:
   image:
     repository: persephonesoft/persephoneshell
     tag: latest
