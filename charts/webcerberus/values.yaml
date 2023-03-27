@@ -8,7 +8,7 @@ fullnameOverride: psnservice
 
 ## @param namespace The namespace in which the WebCerberus will be created
 ##
-nameSpace: persephone
+namespace: ""
 
 ## @param replicaCount Number of WebCerberus replicas
 ## The replicas count is fixed and only 1 is applicable now
@@ -93,7 +93,7 @@ env:
 ## 
 webcerberus:
   image:
-    repository: psnservice/webcerberus
+    repository: persephonesoft/webcerberus
     tag: latest
     pullPolicy: Always
 
@@ -122,7 +122,7 @@ webcerberus:
 ## 
 persephoneshell:
   image:
-    repository: psnservice/persephoneshell
+    repository: persephonesoft/persephoneshell
     tag: latest
     pullPolicy: Always
 
