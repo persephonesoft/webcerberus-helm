@@ -46,7 +46,7 @@ spec:
           args:
             - -ec
             - |
-              chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }} /opt/app
+              chmod a+x {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }} /opt/app/*.exe
               mkdir -p {{ .Values.env.ENVPSN_Blast_DB }}
               find {{ .Values.env.ENVPSN_Blast_DB }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
