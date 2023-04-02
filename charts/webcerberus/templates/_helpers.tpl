@@ -21,9 +21,12 @@ Define Solr service name
 Define Solr service HTTP port
 */}}
 {{- define "psnservice.solrServiceHttpPort" -}}
-{{- default "8983" toString(.Values.solr.service.ports.http) -}}
+{{- if .Values.solr.service.ports.http -}}
+    {{- .Values.solr.service.ports.http | toString -}}
+{{- else -}}
+    {{- printf "8983" -}}
 {{- end -}}
-
+{{- end -}}
 
 {{/*
 Create a default fully qualified app name.
