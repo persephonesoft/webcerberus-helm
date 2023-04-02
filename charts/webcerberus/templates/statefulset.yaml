@@ -83,6 +83,7 @@ spec:
               mountPath: /opt/app/data
             - name: webcerberus-license
               mountPath: /opt/app/
+              subPath: webcerberus.lic
               readOnly: true
           {{- if .Values.webcerberus.probes.liveness.enabled }}
           livenessProbe:
