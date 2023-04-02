@@ -59,3 +59,4 @@ Create Solr URL string.
 {{- else -}}
 {{- printf "http://%s-%s:%s/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- end -}}
+{{- end -}}
