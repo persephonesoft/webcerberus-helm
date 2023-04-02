@@ -21,7 +21,7 @@ Define Solr service name
 Define Solr service HTTP port
 */}}
 {{- define "psnservice.solrServiceHttpPort" -}}
-{{- default "8983" .Values.solr.service.ports.http | toString | trunc 5 -}}
+{{- default "8983" toString(.Values.solr.service.ports.http) -}}
 {{- end -}}
 
 
