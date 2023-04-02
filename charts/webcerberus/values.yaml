@@ -4,11 +4,7 @@
 
 ## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
 ##
-fullnameOverride: psnservice
-
-## @param namespace The namespace in which the WebCerberus will be created
-##
-namespace: ""
+fullnameOverride: ""
 
 ## @param replicaCount Number of WebCerberus replicas
 ## The replicas count is fixed and only 1 is applicable now
@@ -79,8 +75,10 @@ ingresses:
 ## @param env.ENVPSN_Variable_Name with environment variables to add to WebCerberus node
 ##
 env:
+  ## ENVPSN_MariaDB_ConnectionString provide a connection string to the Maria DB database for Webcerberus application
   ENVPSN_MariaDB_ConnectionString: 'root/MySecret1@psnmariadb:3306/persephone'
-  ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
+  ## ENVPSN_Solr_URL provide URL of the Solr service. It's default value is 'printf "%s-%s" (include "psnservice.name" .) (include "psnservice.solrName" .)'
+  ## ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
   ENVPSN_Solr_CoreName: 'persephone'
   ENVPSN_Blast_DB: '/opt/app/data/BlastDB/openplants'
   ENVPSN_Blast_ProgramDirectory: '/opt/app/data/Blast/bin'
@@ -225,6 +223,8 @@ nodeSelector: {}
 ## @section Solr parameters
 ##
 solr:
+  ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
+  ##
   nameOverride: "solr"
 
   ## Bitnami Solr image version
@@ -269,6 +269,20 @@ solr:
   ## The provided below limits/requests values are recomended for using with Webcerberus apllication containing 100M units of data.
   ## One unit of data means one annotation or marker.
   ##
+
+  ## @param containerPorts.http Solr HTTP container port
+  ##
+  containerPorts:
+    http: 8983
+
+  ## @section Traffic Exposure parameters
+  ##
+  service:
+    ## @param service.ports.http Solr HTTP service port
+    ##
+    ports:
+      http: 8983
+
   resources:
     limits:
      cpu: 2000m

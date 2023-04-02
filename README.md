@@ -28,7 +28,7 @@ $ helm install my-release persephone-helm/webcerberus
 ```console
 $ helm repo add my-repo https://persephonesoft.github.io/webcerberus-helm/
 $ helm repo update
-$ helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name="image-pull-secret-name"
+$ helm install my-release persephone-helm/webcerberus --namespace psnspace --create-namespace --set imagePullSecrets[0].name="image-pull-secret-name"
 ```
 
 These commands deploy WebCerberus the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
