@@ -47,24 +47,28 @@ spec:
             - -ec
             - |
               mkdir -p {{ .Values.env.ENVPSN_Blast_DB }}
+              find {{ .Values.env.ENVPSN_Blast_DB }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
+              find {{ .Values.env.ENVPSN_Blast_ProgramDirectory }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_User_Data_Directory }}
+              find {{ .Values.env.ENVPSN_User_Data_Directory }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_File_Storage_Path }}
+              find {{ .Values.env.ENVPSN_File_Storage_Path }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
+              find {{ .Values.env.ENVPSN_Sequence_Storage_Path }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
-          resources:
-            limits:
-              cpu: 500m
-              memory: 512Mi
-            requests:
-              cpu: 350m
-              memory: 512Mi
+          {{- if .Values.volumePermissions.resources }}
+          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
+          {{- end }}
       containers:
         - name: webcerberus
           image: "{{ .Values.webcerberus.image.repository }}:{{ .Values.webcerberus.image.tag }}"
           imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
@@ -127,6 +131,9 @@ spec:
         - name: persephoneshell
           image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
           imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}

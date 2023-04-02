@@ -171,6 +171,29 @@ persephoneshell:
       cpu: 400m
       memory: 512Mi
 
+## Init containers parameters:
+## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
+##
+volumePermissions:
+  ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume
+  ##
+  enabled: false
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 400m
+      memory: 512Mi
+  ## Init container' Security Context
+  ## Note: the chown of the data folder is done to containerSecurityContext.runAsUser
+  ## and not the below volumePermissions.containerSecurityContext.runAsUser
+  ## @param volumePermissions.containerSecurityContext.runAsUser User ID for the init container
+  ##
+  containerSecurityContext:
+    runAsUser: 0
+
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
   # Secrets must be manually created in the namespace.
