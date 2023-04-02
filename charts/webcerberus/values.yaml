@@ -118,6 +118,18 @@ webcerberus:
       successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
       failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
 
+  ## @param resource.limits/requests for the Webcerberus application
+  ## The provided below limits/requests values are recomended for test purposes only.
+  ## Recomended minimum resource limits are 4 CPU and 16 GB of RAM.
+  ##
+  resources:
+    limits:
+     cpu: 2000m
+     memory: 2048Mi
+    requests:
+     cpu: 1000m
+     memory: 2048Mi
+
 ## Section of the PercephoneShell container parameters
 ## 
 persephoneshell:
@@ -146,6 +158,18 @@ persephoneshell:
       timeoutSeconds: 30 # Defaults to 1 second. Minimum value is 1.
       successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
       failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
+
+  ## @param resource.limits/requests for the Webcerberus application
+  ## The provided below limits/requests values are recomended for test purposes only.
+  ## Recomended minimum resource limits are 4 CPU and 16 GB of RAM.
+  ##
+  resources:
+    limits:
+     cpu: 1000m
+     memory: 1048Mi
+    requests:
+     cpu: 1000m
+     memory: 1048Mi
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
@@ -195,19 +219,6 @@ secrets: {}
   # as the environment variable mysecret_mypassword=password.
   # mysecret:
   #   mypassword: password
-
-## @param resource.limits/requests for the Webcerberus application
-## The provided below limits/requests values are recomended for test purposes only.
-## Recomended minimum resource limits are 4 CPU and 16 GB of RAM.
-##
-resources:
-  limits:
-   cpu: 2000m
-   memory: 2048Mi
-  requests:
-   cpu: 1000m
-   memory: 2048Mi
-
 
 ## @param affinity Affinity for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity

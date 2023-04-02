@@ -78,6 +78,9 @@ spec:
             - name: http
               containerPort: {{ .Values.webcerberus.deployment.containerPort }}
               protocol: TCP
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.webcerberus.resources | nindent 10 }}
+          {{- end }}
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
@@ -137,6 +140,9 @@ spec:
             - name: http
               containerPort: {{ .Values.persephoneshell.deployment.containerPort }}
               protocol: TCP
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.persephoneshell.resources | nindent 10 }}
+          {{- end }}
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
