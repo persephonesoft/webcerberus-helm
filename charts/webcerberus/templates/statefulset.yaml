@@ -34,6 +34,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
       initContainers:
         - name: volume-permissions
           image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"

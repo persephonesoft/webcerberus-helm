@@ -127,7 +127,7 @@ webcerberus:
       cpu: 1700m
       memory: 2048Mi
     requests:
-      cpu: 100m
+      cpu: 1000m
       memory: 2048Mi
 
 ## Section of the PercephoneShell container parameters
