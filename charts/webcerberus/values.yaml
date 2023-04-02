@@ -124,11 +124,11 @@ webcerberus:
   ##
   resources:
     limits:
-     cpu: 2000m
-     memory: 2048Mi
+      cpu: 2000m
+      memory: 2048Mi
     requests:
-     cpu: 1000m
-     memory: 2048Mi
+      cpu: 1000m
+      memory: 2048Mi
 
 ## Section of the PercephoneShell container parameters
 ## 
@@ -165,11 +165,11 @@ persephoneshell:
   ##
   resources:
     limits:
-     cpu: 1000m
-     memory: 1048Mi
+      cpu: 1000m
+      memory: 1048Mi
     requests:
-     cpu: 1000m
-     memory: 1048Mi
+      cpu: 1000m
+      memory: 1048Mi
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
@@ -298,11 +298,11 @@ solr:
 
   resources:
     limits:
-     cpu: 2000m
-     memory: 2048Mi
+      cpu: 2000m
+      memory: 2048Mi
     requests:
-     cpu: 1000m
-     memory: 2048Mi
+      cpu: 1000m
+      memory: 2048Mi
 
   zookeeper:
     ## @param zookeeper.enabled Enable ZooKeeper deployment. Needed for Solr cloud
