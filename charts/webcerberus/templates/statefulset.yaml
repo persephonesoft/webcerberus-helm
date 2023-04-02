@@ -28,9 +28,8 @@ spec:
     spec:
       volumes:
         - name: webcerberus-license
-          configMap:
-            name: webcerberus-license
-            defaultMode: 420
+          secret:
+            secretName: webcerberus-license
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -83,8 +82,8 @@ spec:
             - name: psn-data
               mountPath: /opt/app/data
             - name: webcerberus-license
-              mountPath: /opt/app/webcerberus.lic
-              subPath: webcerberus.lic
+              mountPath: /opt/app/
+              readOnly: true
           {{- if .Values.webcerberus.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
