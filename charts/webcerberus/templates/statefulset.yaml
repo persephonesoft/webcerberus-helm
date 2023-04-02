@@ -51,6 +51,13 @@ spec:
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
       containers:
         - name: webcerberus
           image: "{{ .Values.webcerberus.image.repository }}:{{ .Values.webcerberus.image.tag }}"
@@ -141,7 +148,7 @@ spec:
               containerPort: {{ .Values.persephoneshell.deployment.containerPort }}
               protocol: TCP
           {{- if .Values.persephoneshell.resources }}
-          resources: {{- toYaml .Values.persephoneshell.resources | nindent 10 }}
+          resources: {{- toYaml .Values.persephoneshell.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: psn-data
