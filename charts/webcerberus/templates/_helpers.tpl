@@ -21,7 +21,7 @@ Define Solr service name
 Define Solr service HTTP port
 */}}
 {{- define "psnservice.solrServiceHttpPort" -}}
-{{- default "8983" .Values.solr.service.ports.http | trunc 5 -}}
+{{- default "8983" .Values.solr.service.ports.http | toString | trunc 5 -}}
 {{- end -}}
 
 
@@ -57,6 +57,6 @@ Create Solr URL string.
 {{- if .Values.env.ENVPSN_Solr_URL -}}
 {{- .Values.env.ENVPSN_Solr_URL | lower -}}
 {{- else -}}
-{{- printf "http://%s-%s:%d/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .) -}}
+{{- printf "http://%s-%s:%s/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- end -}}
 {{- end -}}
