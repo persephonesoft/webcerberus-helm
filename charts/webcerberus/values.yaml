@@ -124,10 +124,10 @@ webcerberus:
   ##
   resources:
     limits:
-      cpu: 2000m
+      cpu: 1700m
       memory: 2048Mi
     requests:
-      cpu: 1600m
+      cpu: 100m
       memory: 2048Mi
 
 ## Section of the PercephoneShell container parameters
@@ -165,11 +165,11 @@ persephoneshell:
   ##
   resources:
     limits:
-      cpu: 1200m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 512Mi
     requests:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 100m
+      memory: 512Mi
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
