@@ -168,7 +168,7 @@ persephoneshell:
       cpu: 500m
       memory: 512Mi
     requests:
-      cpu: 100m
+      cpu: 400m
       memory: 512Mi
 
 imagePullSecrets: []
