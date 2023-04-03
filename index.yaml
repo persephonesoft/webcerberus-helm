@@ -3,15 +3,15 @@ entries:
   webcerberus:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-04-03T19:38:31.0516609+03:00"
+    created: "2023-04-03T19:47:42.0581195+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
       version: 6.3.x
     description: A Helm chart for Kubernetes
-    digest: c159820217a7037d6ed5dd7008aa7a08852649258a75618f5960f52538982665
+    digest: d41d1e3c21c3192a6b8acc23e551e6a14da21aaef87d442038ce73217cb53f48
     name: webcerberus
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-1.3.0.tgz
     version: 1.3.0
-generated: "2023-04-03T19:38:31.0366616+03:00"
+generated: "2023-04-03T19:47:42.0361201+03:00"
