@@ -33,9 +33,9 @@ $ kubectl create namespace psnspace --dry-run=client -o yaml | kubectl apply -f 
 $ kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\webcerberus.lic --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 3. Create a secret <webcerberus-docker-registry-creds> containing ImagePullSecret for the Wencerberus images pulling:
+ 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Wencerberus images pulling:
  ```console
-$ kubectl create secret docker-registry <webcerberus-docker-registry-creds> --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=*** --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
+$ kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 ## Installing the Chart
@@ -45,7 +45,7 @@ $ kubectl create secret docker-registry <webcerberus-docker-registry-creds> --do
 ```console
 $ helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 $ helm repo update
-$ helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name="<webcerberus-docker-registry-creds>",env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
+$ helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name="webcerberus-docker-registry-creds",env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 These commands deploy WebCerberus the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
