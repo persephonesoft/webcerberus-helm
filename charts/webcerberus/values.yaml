@@ -169,7 +169,7 @@ persephoneshell:
   ##
   resources:
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 512Mi
     requests:
       cpu: 400m
@@ -188,7 +188,7 @@ volumePermissions:
       cpu: 500m
       memory: 512Mi
     requests:
-      cpu: 400m
+      cpu: 100m
       memory: 512Mi
   ## Init container' Security Context
   ## Note: the chown of the data folder is done to containerSecurityContext.runAsUser
@@ -212,9 +212,6 @@ service:
 
 deployment:
   containerPort: 80
-
-serviceAccount:
-  enable: false
 
 probes:
   liveness:
