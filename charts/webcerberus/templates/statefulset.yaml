@@ -131,9 +131,6 @@ spec:
         - name: persephoneshell
           image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
           imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
-          {{- if .Values.containerSecurityContext.enabled }}
-          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
-          {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
