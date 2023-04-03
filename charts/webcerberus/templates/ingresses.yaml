@@ -1,6 +1,5 @@
 {{- $releaseName := .Release.Name -}}
 {{- range $ingress_name, $ingress := .Values.ingresses }}
-{{- $serviceName := $ingress.serviceName -}}
 {{- $servicePort := $ingress.servicePort -}}
 {{- $path := $ingress.path -}}
 {{- if $ingress.enabled }}
@@ -34,7 +33,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: {{ $serviceName }}
+            name: {{ template "psnservice.fullname" . }}
             port:
               number: {{ $servicePort }}
   {{- end }}
