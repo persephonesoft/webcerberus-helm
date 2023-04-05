@@ -11,15 +11,14 @@ Expand the name of the chart.
 {{- end -}}
 
 {{/*
-Ver.9.37
+Ver.9.48
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "psnservice.fullname" -}}
-{{- $lfullName  := "" -}}
-{{- if $lfullName -}}
-{{- $lfullName | trunc 63 | trimSuffix "-" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
