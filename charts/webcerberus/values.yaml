@@ -20,12 +20,12 @@ replicaCount: 1
 ## @param podSecurityContext.fsGroup Set WebCerberus pod's Security Context fsGroup
 ##
 podSecurityContext:
-  enabled: false
+  enabled: true
   fsGroup: 1001
-  # runAsUser: 1001
-  # runAsGroup: 1001
-  # fsGroup: 1001
-  # fsGroupChangePolicy: "OnRootMismatch"
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  fsGroupChangePolicy: "OnRootMismatch"
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
 ## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
@@ -34,7 +34,7 @@ podSecurityContext:
 ## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
 ##
 containerSecurityContext:
-  enabled: false
+  enabled: true
   runAsUser: 1001
   runAsNonRoot: true
   allowPrivilegeEscalation: false
