@@ -8,7 +8,7 @@ nameOverride: ""
 
 ## @param fullnameOverride String to fully override common.names.fullname template
 ##
-# fullnameOverride: ""
+fullnameOverride: "test"
 
 ## @param replicaCount Number of WebCerberus replicas
 ## The replicas count is fixed and only 1 is applicable now
