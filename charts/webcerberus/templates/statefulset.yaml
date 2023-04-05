@@ -30,6 +30,8 @@ spec:
         - name: webcerberus-license
           secret:
             secretName: webcerberus-license
+        - name: data-temp
+          emptyDir: {}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -166,6 +168,8 @@ spec:
           volumeMounts:
             - name: psn-data
               mountPath: /opt/app/data
+            - name: data-temp
+              mountPath: /data
           {{- if .Values.persephoneshell.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
