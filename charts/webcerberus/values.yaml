@@ -346,9 +346,3 @@ ingress-nginx:
   controller:
     config:
       large-client-header-buffers: 8 128k
-
-
-
-
-
-
