@@ -8,7 +8,7 @@ nameOverride: ""
 
 ## @param fullnameOverride String to fully override common.names.fullname template
 ##
-fullnameOverride: ""
+# fullnameOverride: ""
 
 ## @param replicaCount Number of WebCerberus replicas
 ## The replicas count is fixed and only 1 is applicable now
@@ -25,7 +25,7 @@ podSecurityContext:
   # runAsUser: 1001
   # runAsGroup: 1001
   # fsGroup: 1001
-  fsGroupChangePolicy: "OnRootMismatch"
+  # fsGroupChangePolicy: "OnRootMismatch"
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
 ## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
