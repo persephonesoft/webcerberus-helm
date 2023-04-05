@@ -8,7 +8,7 @@ nameOverride: ""
 
 ## @param fullnameOverride String to fully override common.names.fullname template
 ##
-fullnameOverride: test
+fullnameOverride: ""
 
 ## @param replicaCount Number of WebCerberus replicas
 ## The replicas count is fixed and only 1 is applicable now
@@ -24,20 +24,7 @@ podSecurityContext:
   fsGroup: 1001
   runAsUser: 1001
   runAsGroup: 1001
-  fsGroup: 1001
   fsGroupChangePolicy: "OnRootMismatch"
-## Configure Container Security Context
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
-## @param containerSecurityContext.runAsUser Set WebCerberus containers' Security Context runAsUser
-## @param containerSecurityContext.runAsNonRoot Set WebCerberus containers' Security Context runAsNonRoot
-## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
-##
-containerSecurityContext:
-  enabled: true
-  runAsUser: 1001
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
 
 ## @section Persistence parameters
 
@@ -139,6 +126,19 @@ webcerberus:
       cpu: 1000m
       memory: 2048Mi
 
+  ## Configure Container Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
+  ## @param containerSecurityContext.runAsUser Set WebCerberus containers' Security Context runAsUser
+  ## @param containerSecurityContext.runAsNonRoot Set WebCerberus containers' Security Context runAsNonRoot
+  ## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
+  ##
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+
 ## Section of the PercephoneShell container parameters
 ## 
 persephoneshell:
@@ -168,9 +168,8 @@ persephoneshell:
       successThreshold: 1 # Defaults to 1. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
       failureThreshold: 3 # Defaults to 3. Minimum value is 1. Used default value in order to have posibility to ovveride is neccesary
 
-  ## @param resource.limits/requests for the Webcerberus application
+  ## @param resource.limits/requests for the InitContainer
   ## The provided below limits/requests values are recomended for test purposes only.
-  ## Recomended minimum resource limits are 4 CPU and 16 GB of RAM.
   ##
   resources:
     limits:
@@ -179,6 +178,18 @@ persephoneshell:
     requests:
       cpu: 400m
       memory: 512Mi
+
+## Configure Container Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+## @param containerSecurityContext.enabled Enabled InitContainer containers' Security Context
+## @param containerSecurityContext.runAsUser Set InitContainer containers' Security Context runAsUser
+## @param containerSecurityContext.runAsNonRoot Set InitContainer containers' Security Context runAsNonRoot
+## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
+##
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 0
+    privileged: true
 
 ## Init containers parameters:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
@@ -201,7 +212,9 @@ volumePermissions:
   ## @param volumePermissions.containerSecurityContext.runAsUser User ID for the init container
   ##
   containerSecurityContext:
+    enabled: true
     runAsUser: 0
+    privileged: true
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
