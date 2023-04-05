@@ -188,8 +188,9 @@ persephoneshell:
 ##
   containerSecurityContext:
     enabled: true
-    runAsUser: 0
-    privileged: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: true
 
 ## Init containers parameters:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
