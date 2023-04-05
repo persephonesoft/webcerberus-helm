@@ -55,6 +55,7 @@ spec:
               find {{ .Values.env.ENVPSN_Blast_DB }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
               find {{ .Values.env.ENVPSN_Blast_ProgramDirectory }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
+              find {{ .Values.env.ENVPSN_Blast_ProgramDirectory }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chmod -R u+w
               mkdir -p {{ .Values.env.ENVPSN_User_Data_Directory }}
               find {{ .Values.env.ENVPSN_User_Data_Directory }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_File_Storage_Path }}
