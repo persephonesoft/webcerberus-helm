@@ -23,7 +23,6 @@ podSecurityContext:
   enabled: true
   fsGroup: 1001
   runAsUser: 1001
-  runAsGroup: 1001
   fsGroupChangePolicy: "OnRootMismatch"
 
 ## @section Persistence parameters
@@ -43,7 +42,7 @@ persistence:
   ## @param persistence.accessModes PVC Access modes
   ##
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOncePod
   ## @param persistence.size PVC Storage Request for WebCerberus data volume
   ##
   size: 10Gi
