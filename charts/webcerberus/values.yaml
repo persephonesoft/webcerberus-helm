@@ -42,7 +42,7 @@ persistence:
   ## @param persistence.accessModes PVC Access modes
   ##
   accessModes:
-    - ReadWriteOncePod
+    - ReadWriteOnce
   ## @param persistence.size PVC Storage Request for WebCerberus data volume
   ##
   size: 10Gi
