@@ -23,6 +23,7 @@ podSecurityContext:
   enabled: true
   fsGroup: 1001
   runAsUser: 1001
+  runAsGroup: 1001
   fsGroupChangePolicy: "OnRootMismatch"
 
 ## @section Persistence parameters
@@ -135,6 +136,7 @@ webcerberus:
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
+    fsGroup: 1001
     runAsNonRoot: true
     allowPrivilegeEscalation: false
 
@@ -188,6 +190,7 @@ persephoneshell:
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
+    fsGroup: 1001
     runAsNonRoot: true
     allowPrivilegeEscalation: false
 
