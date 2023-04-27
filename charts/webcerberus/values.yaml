@@ -62,11 +62,11 @@ ingresses:
     servicePort: 80
     path: /
     hosts:
-      - webcerberus.ykspace.org
+      - webcerberus.space.org
     tls:
       - secretName: ingress-tls-cert-webcerberus
         hosts:
-          - webcerberus.ykspace.org
+          - webcerberus.space.org
 
 ## @param env.ENVPSN_Variable_Name with environment variables to add to WebCerberus node
 ##

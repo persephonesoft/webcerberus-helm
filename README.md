@@ -47,7 +47,7 @@ The secret name `your-tls-secret-name` used in te ingresses.webcernerus section 
 ```console
 helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 helm repo update
-helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name="webcerberus-docker-registry-creds",env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
+helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
 ```
 
 These commands deploy WebCerberus the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
