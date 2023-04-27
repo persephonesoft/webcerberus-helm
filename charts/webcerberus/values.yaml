@@ -136,7 +136,6 @@ webcerberus:
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
-    fsGroup: 1001
     runAsNonRoot: true
     allowPrivilegeEscalation: false
 
@@ -189,10 +188,8 @@ persephoneshell:
 ##
   containerSecurityContext:
     enabled: true
-    runAsUser: 1001
-    fsGroup: 1001
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
+    runAsUser: 0
+    privileged: true
 
 ## Init containers parameters:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
