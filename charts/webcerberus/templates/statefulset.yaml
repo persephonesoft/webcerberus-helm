@@ -63,7 +63,7 @@ spec:
               find {{ .Values.env.ENVPSN_Sequence_Storage_Path }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
           volumeMounts:
             - name: psn-data
-              mountPath: /opt/app/data
+              mountPath: /opt/data
           {{- if .Values.volumePermissions.resources }}
           resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
           {{- end }}
@@ -102,7 +102,7 @@ spec:
           {{- end }}
           volumeMounts:
             - name: psn-data
-              mountPath: /opt/app/data
+              mountPath: /opt/data
             - name: webcerberus-license
               mountPath: /opt/app/webcerberus.lic
               subPath: webcerberus.lic
@@ -167,7 +167,7 @@ spec:
           {{- end }}
           volumeMounts:
             - name: psn-data
-              mountPath: /opt/app/data
+              mountPath: /opt/data
             - name: data-temp
               mountPath: /data
           {{- if .Values.persephoneshell.probes.liveness.enabled }}

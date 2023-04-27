@@ -78,11 +78,11 @@ env:
   ##
   # ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
   ENVPSN_Solr_CoreName: 'persephone'
-  ENVPSN_Blast_DB: '/opt/app/data/BlastDB/openplants'
-  ENVPSN_Blast_ProgramDirectory: '/data/Blast/bin'
-  ENVPSN_User_Data_Directory: '/opt/app/data/DataUsers'
-  ENVPSN_File_Storage_Path: '/opt/app/data/FileStorage'
-  ENVPSN_Sequence_Storage_Path: '/opt/app/data/SequenceStorage'
+  ENVPSN_Blast_DB: '/opt/data/BlastDB/openplants'
+  ENVPSN_Blast_ProgramDirectory: '/opt/data/Blast/bin'
+  ENVPSN_User_Data_Directory: '/opt/data/DataUsers'
+  ENVPSN_File_Storage_Path: '/opt/data/FileStorage'
+  ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
   ENVPSN_Temp_Directory: '/tmp'
 
 ## Section of the WebCerberus container parameters
