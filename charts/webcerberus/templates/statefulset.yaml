@@ -104,7 +104,7 @@ spec:
             - name: psn-data
               mountPath: /opt/data
             - name: webcerberus-license
-              mountPath: /opt/app/webcerberus.lic
+              mountPath: /home/appuser/app/webcerberus.lic
               subPath: webcerberus.lic
               readOnly: true
           {{- if .Values.webcerberus.probes.liveness.enabled }}
