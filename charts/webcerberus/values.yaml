@@ -24,6 +24,13 @@ podSecurityContext:
   fsGroup: 1001
   fsGroupChangePolicy: "Always"
 
+## Configure Container Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
+## @param containerSecurityContext.runAsUser Set WebCerberus containers' Security Context runAsUser
+## @param containerSecurityContext.runAsNonRoot Set WebCerberus containers' Security Context runAsNonRoot
+## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
+##
 containerSecurityContext:
   enabled: true
   runAsUser: 1001
@@ -129,19 +136,6 @@ webcerberus:
       cpu: 1000m
       memory: 2048Mi
 
-  ## Configure Container Security Context
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  ## @param containerSecurityContext.enabled Enabled WebCerberus containers' Security Context
-  ## @param containerSecurityContext.runAsUser Set WebCerberus containers' Security Context runAsUser
-  ## @param containerSecurityContext.runAsNonRoot Set WebCerberus containers' Security Context runAsNonRoot
-  ## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
-  ##
-  containerSecurityContext:
-    enabled: true
-    runAsUser: 1001
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
-
 ## Section of the PercephoneShell container parameters
 ## 
 persephoneshell:
@@ -181,20 +175,6 @@ persephoneshell:
     requests:
       cpu: 400m
       memory: 512Mi
-
-## Configure Container Security Context
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-## @param containerSecurityContext.enabled Enabled InitContainer containers' Security Context
-## @param containerSecurityContext.runAsUser Set InitContainer containers' Security Context runAsUser
-## @param containerSecurityContext.runAsNonRoot Set InitContainer containers' Security Context runAsNonRoot
-## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
-##
-  containerSecurityContext:
-    enabled: true
-    runAsUser: 1001
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
-
 
 ## Init containers parameters:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node

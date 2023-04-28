@@ -71,8 +71,8 @@ spec:
         - name: webcerberus
           image: "{{ .Values.webcerberus.image.repository }}:{{ .Values.webcerberus.image.tag }}"
           imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
-          {{- if .Values.webcerberus.containerSecurityContext.enabled }}
-          securityContext: {{- omit .Values.webcerberus.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
@@ -136,8 +136,8 @@ spec:
         - name: persephoneshell
           image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
           imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
-          {{- if .Values.persephoneshell.containerSecurityContext.enabled }}
-          securityContext: {{- omit .Values.persephoneshell.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
