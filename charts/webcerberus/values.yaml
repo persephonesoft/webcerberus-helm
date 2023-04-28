@@ -188,8 +188,9 @@ persephoneshell:
 ##
   containerSecurityContext:
     enabled: true
-    runAsUser: 0
-    privileged: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
 
 
 ## Init containers parameters:
