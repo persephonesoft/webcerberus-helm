@@ -62,7 +62,7 @@ To uninstall/delete the `my-release` statefulset:
 helm uninstall my-release -n psnspace
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release. Use the option `--purge` to delete all history too. Remove manually persistent volumes created by the release.
+The command removes all the Kubernetes components associated with the chart and deletes the release. Use the option `--purge` to delete all history too. Remove manually persistent volumes created by the release and the secrets created on steps 2 and 3 of the installation guide.
 
 ## Parameters
 

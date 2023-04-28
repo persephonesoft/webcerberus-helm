@@ -86,14 +86,18 @@ env:
   # ENVPSN_MariaDB_ConnectionString: 'root/MySecret1@psnmariadb:3306/persephone'
   ## ENVPSN_Solr_URL provide URL of the Solr service. It's default value is 'printf "http://%s-%s:%s/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .)'
   ##
-  # ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
+  ## ENVPSN_Solr_URL: 'http://psnservice-solr:8983/solr'
   ENVPSN_Solr_CoreName: 'persephone'
+  ## The application temporary directory
+  ENVPSN_Temp_Directory: '/tmp'
+  ## The next directory list must be located on the persistent volume 'psn-data', mounted by path '/opt/data'
+  ## Make sure you have changed the mounting point if the directories are changed
+  #
   ENVPSN_Blast_DB: '/opt/data/BlastDB/openplants'
   ENVPSN_Blast_ProgramDirectory: '/opt/data/Blast/bin'
   ENVPSN_User_Data_Directory: '/opt/data/DataUsers'
   ENVPSN_File_Storage_Path: '/opt/data/FileStorage'
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
-  ENVPSN_Temp_Directory: '/tmp'
 
 ## Section of the WebCerberus container parameters
 ## 
