@@ -215,8 +215,12 @@ volumePermissions:
   ##
   containerSecurityContext:
     enabled: true
-    runAsUser: 0
-    privileged: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    # enabled: true
+    # runAsUser: 0
+    # privileged: true
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.
