@@ -22,9 +22,12 @@ replicaCount: 1
 podSecurityContext:
   enabled: true
   fsGroup: 1001
-  runAsUser: 1001
-  runAsGroup: 1001
   fsGroupChangePolicy: "Always"
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
 
 ## @section Persistence parameters
 
@@ -197,9 +200,6 @@ persephoneshell:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
 ##
 volumePermissions:
-  ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume
-  ##
-  enabled: false
 
   resources:
     limits:

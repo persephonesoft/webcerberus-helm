@@ -51,11 +51,16 @@ spec:
           args:
             - -ec
             - |
+              mkdir -p /opt/data
+              find /opt/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}
               mkdir -p {{ .Values.env.ENVPSN_Blast_DB }}
               mkdir -p {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
               mkdir -p {{ .Values.env.ENVPSN_User_Data_Directory }}
               mkdir -p {{ .Values.env.ENVPSN_File_Storage_Path }}
               mkdir -p {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
+          {{- if .Values.volumePermissions.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.volumePermissions.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: psn-data
               mountPath: /opt/data
