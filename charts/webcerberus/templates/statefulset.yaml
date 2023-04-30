@@ -41,7 +41,7 @@ spec:
       {{- end }}
       initContainers:
         - name: volume-permissions
-          image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
+          image: "{{ template "persephoneshell.imageName" . }}"
           imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
           {{- if .Values.volumePermissions.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.volumePermissions.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -69,7 +69,7 @@ spec:
           {{- end }}
       containers:
         - name: webcerberus
-          image: "{{ .Values.webcerberus.image.repository }}:{{ .Values.webcerberus.image.tag }}"
+          image: "{{ template "webcerberus.imageName" . }}"
           imagePullPolicy: {{ .Values.webcerberus.image.pullPolicy }}
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -134,7 +134,7 @@ spec:
               exec:
                 command: ["sleep","90"]
         - name: persephoneshell
-          image: "{{ .Values.persephoneshell.image.repository }}:{{ .Values.persephoneshell.image.tag }}"
+          image: "{{ template "persephoneshell.imageName" . }}"
           imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}

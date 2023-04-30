@@ -103,8 +103,9 @@ env:
 ## 
 webcerberus:
   image:
+    registry: docker.io
     repository: persephonesoft/webcerberus
-    tag: latest
+    tag: ""
     pullPolicy: Always
 
   deployment:
@@ -144,8 +145,9 @@ webcerberus:
 ## 
 persephoneshell:
   image:
+    registry: docker.io
     repository: persephonesoft/persephoneshell
-    tag: latest
+    tag: ""
     pullPolicy: Always
 
   deployment:
