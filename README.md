@@ -19,7 +19,7 @@ A set of Webcerberus versions available for deploying on Kubernetes is:
 - Credentials for access to the private Docker.io repository provided as the Kubernetes secret. See [Pull an Image from a Private Registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-pod-that-uses-your-secret)
 - (Optional) TLS Certificate for Ingress service
 
-Before run the Helm release installation two secrets must be created the Kubernetes namespace where you are planning deploy Webcerberus application:
+Before running the Helm release installation two secrets must be created in the Kubernetes namespace where you are planning to deploy the Webcerberus application:
 
  1. Create the Kubernetes namespace `psnspace`:
  ```console
@@ -42,7 +42,7 @@ openssl rsa -in key-filename.key -out key-filename-decrypted.key
 openssl pkcs12 -in pfx-filename.pfx -clcerts -nokeys -out crt-filename.crt  ##remove clcerts to get the full chain in your cert
 kubectl create secret tls your-tls-secret-name --cert crt-filename.crt --key key-filename-decrypted.key
 ```
-The secret name `your-tls-secret-name` used in te ingresses.webcernerus section og the value file.
+The secret name `your-tls-secret-name` is used in the `ingresses.webcernerus.tls` section of the Helm value file. By default, the section is commented and the ingress service for Webcerberus will be created in HTTTP mode only.
 
 ## Installing the Chart
 
@@ -73,5 +73,4 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Parameters
 
-See parameters explanation in file webcerberus-helm\charts\webcerberus\values.yaml
-
+See the explanation of the parameters in the file `webcerberus-helm\charts\webcerberus\values.yaml`
