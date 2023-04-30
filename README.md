@@ -3,7 +3,9 @@
 ## Ready Helm Chart with Containers from Docker Hub
 
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
+
 The lates Webcerberus version is 8.1.8518.
+
 Also a set of previous versions is available for deploying on Kubernetes:
  - 7.5.8405
 
