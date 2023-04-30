@@ -3,6 +3,9 @@
 ## Ready Helm Chart with Containers from Docker Hub
 
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
+The lates Webcerberus version is 8.1.8518.
+Also a set of previous versions is available for deploying on Kubernetes:
+ - 7.5.8405
 
 ## Prerequisites
 
@@ -51,6 +54,10 @@ helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].na
 ```
 
 These commands deploy WebCerberus the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+
+For deploying the Webcerberus specific version provide the version string as the Helm install --version parameter. For example, to install the Webcerberus of version 8.1.8518 run the command:
+```console
+helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
 
 > **Tip**: List all releases using `helm list`
 
