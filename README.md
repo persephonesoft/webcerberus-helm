@@ -4,9 +4,8 @@
 
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
-The lates Webcerberus version is 8.1.8518.
-
-Also a set of previous versions is available for deploying on Kubernetes:
+A set of Webcerberus versions available for deploying on Kubernetes is:
+ - 8.1.8518 (the latest version)
  - 7.5.8405
 
 ## Prerequisites
