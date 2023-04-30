@@ -63,3 +63,31 @@ Create Solr URL string.
 {{- printf "http://%s-%s:%s/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+This allows us to check if the registry of the image is specified or not.
+*/}}
+{{- define "webcerberus.imageName" -}}
+{{- $registryName := .Values.webcerberus.image.registry -}}
+{{- $repository := .Values.webcerberus.image.repository -}}
+{{- $tag := .Values.webcerberus.image.tag | default .Chart.AppVersion -}}
+{{- if $registryName }}
+{{- printf "%s/%s:%s" $registryName $repository $tag -}}
+{{- else }}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end }}
+{{- end -}}
+
+{{/*
+This allows us to check if the registry of the image is specified or not.
+*/}}
+{{- define "persephoneshell.imageName" -}}
+{{- $registryName := .Values.persephoneshell.image.registry -}}
+{{- $repository := .Values.persephoneshell.image.repository -}}
+{{- $tag := .Values.persephoneshell.image.tag | default .Chart.AppVersion -}}
+{{- if $registryName }}
+{{- printf "%s/%s:%s" $registryName $repository $tag -}}
+{{- else }}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end }}
+{{- end -}}
