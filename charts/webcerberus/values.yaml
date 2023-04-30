@@ -73,10 +73,12 @@ ingresses:
     path: /
     hosts:
       - webcerberus.space.org
-    tls:
-      - secretName: ingress-tls-cert-webcerberus
-        hosts:
-          - webcerberus.space.org
+    ## Uncomment tls section if you want to configure TLS Certificate for the ingress.
+    ##
+    # tls:
+    #   - secretName: ingress-tls-cert-webcerberus
+    #     hosts:
+    #       - webcerberus.space.org
 
 ## @param env.ENVPSN_Variable_Name with environment variables to add to WebCerberus node
 ##
