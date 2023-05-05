@@ -37,12 +37,14 @@ kubectl create secret docker-registry webcerberus-docker-registry-creds --docker
 ```
 
  4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`.
- 
+
  The connection string can be passed via the `--set ` option:
  ````console
  helm install ... --set env.ENVPSN_MariaDB_ConnectionString=<connection-string>
  ````
- or by referrence on the Kubernetes secret name. ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+ or by reference on the Kubernetes secret name. 
+ 
+ ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
  ```console
 apiVersion: v1
 kind: Secret
@@ -52,7 +54,8 @@ type: Opaque
 stringData:
     connection-string: "db_user/db_user-secret@psnmaria.db.host:3306/persephone-db"
 ~
-```
+````
+    ***Notification: Any secret name can be used but the key name must be `connection-string`.
 
 Then deploy the above secret file as follows:
 ````console
@@ -60,8 +63,6 @@ kubectl apply -f maria-db-ysecret.yaml --namespace psnspace
 ````
 
 Point out the secret's name in the Helm parameter `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`. If the secrte name is empty (is not provided), the `.Value.env.ENVPSN_MariaDB_ConnectionString` will be used.
-
-    ***Notification: Any secret name can be used but the key name must be `connection-string`.
 
 5. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
  ```console
