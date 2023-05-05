@@ -82,7 +82,7 @@ helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 helm repo update
 helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
-if the MariaDB connection string is in Kubernetes secret (secret name is in `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`), or:
+if the MariaDB connection string is in Kubernetes secret and secret's name is in `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`, or:
 ```console
 helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 helm repo update
