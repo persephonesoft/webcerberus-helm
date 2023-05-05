@@ -37,6 +37,7 @@ kubectl create secret docker-registry webcerberus-docker-registry-creds --docker
 ```
 
  4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`.
+ 
  The connection string can be passed via the `--set ` option:
  ````console
  helm install ... --set env.ENVPSN_MariaDB_ConnectionString=<connection-string>
