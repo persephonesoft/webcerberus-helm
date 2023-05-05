@@ -36,7 +36,7 @@ kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\we
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 4. Prepare a connection string for access to the Maria DB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`. The connection string can be passed or via the `--set ` option:
+ 4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`. The connection string can be passed or via the `--set ` option:
  ````console
  helm install ... --set env.ENVPSN_MariaDB_ConnectionString=<connection-string>
  ````
@@ -54,10 +54,10 @@ stringData:
 
 Then deploy the above secret file as follows:
 ````console
-kubectl apply -f maria-db-ysecret.yaml
+kubectl apply -f maria-db-ysecret.yaml --namespace psnspace
 ````
 
-Provide the secret name via Helm value parameter `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`. If the secrte name is empty (is not provided), the `.Value.env.ENVPSN_MariaDB_ConnectionString` will be used.
+Point out the secret's name in the Helm parameter `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`. If the secrte name is empty (is not provided), the `.Value.env.ENVPSN_MariaDB_ConnectionString` will be used.
 
     ***Notification: Any secret name can be used but the key name must be `connection-string`.
 
