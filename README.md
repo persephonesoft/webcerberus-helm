@@ -36,11 +36,11 @@ kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\we
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`. The connection string can be passed or via the `--set ` option:
+ 4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`. The connection string can be passed via the `--set ` option:
  ````console
  helm install ... --set env.ENVPSN_MariaDB_ConnectionString=<connection-string>
  ````
- or by referrence on K8S secret secret name. ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+ or by referrence on the Kubernetes secret name. ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
  ```console
 apiVersion: v1
 kind: Secret
