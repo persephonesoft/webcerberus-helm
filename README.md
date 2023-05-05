@@ -35,7 +35,36 @@ kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\we
  ```console
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
-4. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
+
+ 4. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`.
+
+ The connection string can be passed via the `--set ` option:
+ ````console
+ helm install ... --set env.ENVPSN_MariaDB_ConnectionString=<connection-string>
+ ````
+ or by reference on the Kubernetes secret name. 
+ 
+ ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+ ```console
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webcerberus-mariadb-connection-string
+type: Opaque
+stringData:
+    connection-string: "db_user/db_user-secret@psnmaria.db.host:3306/persephone-db"
+~
+````
+    ***Notification: Any secret name can be used but the key name must be `connection-string`.
+
+Then deploy the above secret file as follows:
+````console
+kubectl apply -f maria-db-ysecret.yaml --namespace psnspace
+````
+
+Point out the secret's name in the Helm parameter `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`. If the secrte name is empty (is not provided), the `.Value.env.ENVPSN_MariaDB_ConnectionString` will be used.
+
+5. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
  ```console
 openssl pkcs12 -in pfx-filename.pfx -nocerts -out key-filename.key
 openssl rsa -in key-filename.key -out key-filename-decrypted.key
@@ -46,19 +75,26 @@ The secret name `your-tls-secret-name` is used in the `ingresses.webcernerus.tls
 
 ## Installing the Chart
 
- To install the chart with the release name `my-release` in te Kubernetes namespace `psnspace`:
+ To install the chart with the release name `my-release` in te Kubernetes namespace `psnspace`, run next commands:
 
+```console
+helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
+helm repo update
+helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
+```
+if the MariaDB connection string is in Kubernetes secret and secret's name is in `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`, or:
 ```console
 helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 helm repo update
 helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
 ```
+if the MariaDB connection string is provided as a string parameter.
 
 These commands deploy the latest version of WebCerberus to the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 For deploying the Webcerberus of a specific version provide the version string as the Helm install --version parameter. For example, to install the Webcerberus of version 8.1.8518 run the command:
 ```console
-helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
+helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
 
 ## Uninstalling the Chart
