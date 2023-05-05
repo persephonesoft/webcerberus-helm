@@ -75,15 +75,17 @@ The secret name `your-tls-secret-name` is used in the `ingresses.webcernerus.tls
 
 ## Installing the Chart
 
- To install the chart with the release name `my-release` in te Kubernetes namespace `psnspace`:
+ To install the chart with the release name `my-release` in te Kubernetes namespace `psnspace`, run next commands:
 
 ```console
 helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
 helm repo update
 helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
-or 
+if the MariaDB connection string is in Kubernetes secret (secret name is in `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`), or:
 ```console
+helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
+helm repo update
 helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret@psnmaria.db:3306/persephone" --namespace psnspace
 ```
 if the MariaDB connection string is provided as a string parameter.
