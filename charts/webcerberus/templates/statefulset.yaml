@@ -149,7 +149,14 @@ spec:
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
+            {{- if .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
+                  key: connection_string
+            {{- else }}
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
+            {{- end }}
             - name: ENVPSN_Solr_URL
               value: {{ template "psnservice.solrUrl" . }}
             - name: ENVPSN_Solr_CoreName
