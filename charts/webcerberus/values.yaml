@@ -101,6 +101,14 @@ env:
   ENVPSN_File_Storage_Path: '/opt/data/FileStorage'
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
 
+## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
+## The secrets must be created in advance.
+##
+env_from_secret:
+  ## env_from_secret.ENVPSN_MariaDB_ConnectionString provide a secret name containing connection string to the Maria DB database for Webcerberus application
+  ##
+  ENVPSN_MariaDB_ConnectionString: webcerberus-mariadb-connection-string
+
 ## Section of the WebCerberus container parameters
 ## 
 webcerberus:
