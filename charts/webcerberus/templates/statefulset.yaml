@@ -84,7 +84,6 @@ spec:
             {{- else }}
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             {{- end }}
-              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             - name: ENVPSN_Solr_URL
               value: {{ template "psnservice.solrUrl" . }}
             - name: ENVPSN_Solr_CoreName
