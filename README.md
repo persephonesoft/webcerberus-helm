@@ -97,6 +97,66 @@ For deploying the Webcerberus of a specific version provide the version string a
 helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
 
+## Mounting the GPFS volume for BLAST operation
+
+Here's an example of using `volumeClaimTemplates` for a GPFS (General Parallel File System) volume in a StatefulSet:
+
+Assuming you have already set up the GPFS storage and created a GPFS-specific storage class (e.g., `gpfs-storage-class`), it can be used in the following configuration:
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-gpfs-statefulset
+spec:
+  serviceName: my-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-container
+          image: my-image:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gpfs-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: gpfs-pvc
+      spec:
+        storageClassName: gpfs-storage-class  # GPFS-specific storage class
+        accessModes:
+          - ReadWriteMany  # GPFS supports ReadWriteMany for shared access
+        resources:
+          requests:
+            storage: 10Gi  # Requested size for each PVC
+        volumeMode: Filesystem
+        # Add any additional GPFS-specific mount options as needed, like vers=4.1
+```
+
+Explanation:
+1. The StatefulSet creates three replicas of the pod, each with its own PVC.
+2. The `volumeClaimTemplates` section defines a template for creating the PVCs. In this example, we named it `gpfs-pvc`.
+3. The `gpfs-pvc` PVC will be created based on the GPFS-specific storage class (`gpfs-storage-class`) defined in the `storageClassName` field.
+4. The `accessModes` is set to `ReadWriteMany` to allow shared access to the GPFS volume.
+5. `resources.requests.storage` specifies the requested storage size for each PVC (e.g., 10Gi).
+6. The `volumeMode` is set to `Filesystem` to indicate a file system type volume.
+
+
+The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `storageClassName`, `resources.requests.storage`, and any other mount options according to your GPFS setup and requirements.
+
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` statefulset:
