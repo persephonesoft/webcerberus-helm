@@ -99,9 +99,7 @@ helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set ima
 
 ## Mounting the GPFS volume for BLAST operation
 
-Here's an example of using `volumeClaimTemplates` for a GPFS (General Parallel File System) volume in a StatefulSet:
-
-Assuming you have already set up the GPFS storage and created a GPFS-specific storage class (e.g., `gpfs-storage-class`), it can be used in the following configuration:
+Here is an example of using `volumeClaimTemplates` for a GPFS (General Parallel File System) volume in a StatefulSet. Assuming the GPFS storage is already set up and a GPFS-specific storage class (e.g., `gpfs-storage-class`) is already created , it is used in the following configuration:
 
 ```yaml
 apiVersion: apps/v1
