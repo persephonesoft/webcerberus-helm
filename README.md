@@ -108,7 +108,7 @@ metadata:
   name: my-gpfs-statefulset
 spec:
   serviceName: my-service
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: my-app
@@ -144,11 +144,11 @@ spec:
 ```
 
 Explanation:
-1. The StatefulSet creates three replicas of the pod, each with its own PVC.
+1. The StatefulSet creates a replica of the pod, with its own PVC.
 2. The `volumeClaimTemplates` section defines a template for creating the PVCs. In this example, we named it `gpfs-pvc`.
 3. The `gpfs-pvc` PVC will be created based on the GPFS-specific storage class (`gpfs-storage-class`) defined in the `storageClassName` field.
 4. The `accessModes` is set to `ReadWriteMany` to allow shared access to the GPFS volume.
-5. `resources.requests.storage` specifies the requested storage size for each PVC (e.g., 10Gi).
+5. `resources.requests.storage` specifies the requested storage size for the PVC (e.g., 10Gi).
 6. The `volumeMode` is set to `Filesystem` to indicate a file system type volume.
 
 
