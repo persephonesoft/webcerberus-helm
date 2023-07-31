@@ -80,7 +80,7 @@ spec:
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
-            {{- if .Values.ENVPSN_MariaDB_ConnectionString }}
+            {{- if .Values.env.ENVPSN_MariaDB_ConnectionString }}
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             {{- else }}
               valueFrom:
@@ -154,7 +154,7 @@ spec:
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
-            {{- if .Values.ENVPSN_MariaDB_ConnectionString }}
+            {{- if .Values.env.ENVPSN_MariaDB_ConnectionString }}
               value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             {{- else }}
               valueFrom:
