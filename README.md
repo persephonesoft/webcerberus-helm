@@ -171,7 +171,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 See the explanation of the parameters in the file `webcerberus-helm\charts\webcerberus\values.yaml`
 
-## Installing Wencerberus in local environment
+## Installing Wencerberus in a local environment
 
 For development, testing or experimental purposes, Webcerberus application can be installed locally. As a local environment can be used the [Minikube](https://kubernetes.io/docs/home/) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for Windows or MacOS only) tools that facilitate running a single-node Kubernetes cluster on a local machine.
 
@@ -365,6 +365,8 @@ helm install my-release C:\Downloads\webcerberus\charts\webcerberus --set imageP
 if the MariaDB connection string is provided as a string parameter.
 
 The Webcerberus will be installed in your local environment.
+
+In the same way, the Webcerberus can be deployed to remote Kubernetes cluster from the unpacked Helm chart.
 
 
 
