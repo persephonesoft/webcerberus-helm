@@ -5,12 +5,13 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 8.1.8518 (the latest version)
+ - 8.1.8518-1 (the latest version)
+ - 8.1.8518
  - 7.5.8405
 
 ## Prerequisites
 
-- Kubernetes 1.24+
+- Kubernetes 1.24+ (or latest Minikube, Docker Desktop tools)
 - Helm 3.2.0+
 - PV provisioner support in the underlying infrastructure
 - ReadWriteMany volumes for deployment scaling
@@ -97,6 +98,65 @@ For deploying the Webcerberus of a specific version provide the version string a
 helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
 
+## Mounting the GPFS volume for BLAST operation
+
+NOTICE: The volume type can not be changed after the chart installation.
+
+Here is an example of using `volumeClaimTemplates` for a GPFS (General Parallel File System) volume in a StatefulSet. Assuming the GPFS storage is already set up and a GPFS-specific storage class (e.g., `gpfs-storage-class`) is already created , it is used in the following configuration:
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-gpfs-statefulset
+spec:
+  serviceName: my-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-container
+          image: my-image:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gpfs-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: gpfs-pvc
+      spec:
+        storageClassName: gpfs-storage-class  # GPFS-specific storage class
+        accessModes:
+          - ReadWriteMany  # GPFS supports ReadWriteMany for shared access
+        resources:
+          requests:
+            storage: 10Gi  # Requested size for each PVC
+        volumeMode: Filesystem
+        # Add any additional GPFS-specific mount options as needed, like vers=4.1
+```
+
+Explanation:
+1. The StatefulSet creates a replica of the pod, with its own PVC.
+2. The `volumeClaimTemplates` section defines a template for creating the PVCs. In this example, we named it `gpfs-pvc`.
+3. The `gpfs-pvc` PVC will be created based on the GPFS-specific storage class (`gpfs-storage-class`) defined in the `storageClassName` field.
+4. The `accessModes` is set to `ReadWriteMany` to allow shared access to the GPFS volume.
+5. `resources.requests.storage` specifies the requested storage size for the PVC (e.g., 10Gi).
+6. The `volumeMode` is set to `Filesystem` to indicate a file system type volume.
+
+
+The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `storageClassName`, `resources.requests.storage`, and any other mount options according to your GPFS setup and requirements.
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` statefulset:
@@ -110,3 +170,198 @@ The command removes all the Kubernetes components associated with the chart and 
 ## Parameters
 
 See the explanation of the parameters in the file `webcerberus-helm\charts\webcerberus\values.yaml`
+
+## Installing Wencerberus in local environment
+
+For development, testing or experimental purposes, Webcerberus application can be installed locally. As a local environment can be used the [Minikube](https://kubernetes.io/docs/home/) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for Windows or MacOS only) tools that facilitate running a single-node Kubernetes cluster on a local machine.
+
+The local Webcerberus installation requires the same prerequisites, as it is described in the "Prerequisites" section.
+Before running the Helm release installation two secrets must be created in the Kubernetes namespace where you are planning to deploy the Webcerberus application:
+
+ 1. Create the Kubernetes namespace `psnspace`:
+ ```console
+kubectl create namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
+```
+
+ 2. Create a secret `webcerberus-license` containing WebCerberus licensing information:
+ ```console
+kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\webcerberus.lic --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
+```
+
+ 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Wencerberus images pulling:
+ ```console
+kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
+```
+
+ 4. The  MariaDB database can be installed in the same namespace from any public repo.As an example, the MariaDB 
+
+```console
+helm repo add azure-marketplace https://marketplace.azurecr.io/helm/v1/repo
+helm repo update
+helm install mariadb azure-marketplace/mariadb --namespace psnspace --set architecture=standalone,auth.rootPassword="MySecret1",auth.database=persephone,primary.persistence.enabled=true -f 'A:\Path\To\\mariadb-helm-values.yaml'
+```
+where release name is `mariadb`, `mariadb-helm-values.yaml` contains custom configuration required by Webcerberus:
+
+```yaml
+## @param nameOverride String to partially override mariadb.fullname
+##
+nameOverride: "psnmariadb"
+
+## @param architecture MariaDB architecture (`standalone` or `replication`)
+##
+architecture: standalone
+
+## Mariadb Primary parameters
+##
+primary:
+  ## @param primary.configuration [string] MariaDB Primary configuration to be injected as ConfigMap
+  ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
+  ##
+  configuration: |-
+    [mysqld]
+    skip-name-resolve
+    explicit_defaults_for_timestamp
+    basedir=/opt/bitnami/mariadb
+    plugin_dir=/opt/bitnami/mariadb/plugin
+    port=3306
+    socket=/opt/bitnami/mariadb/tmp/mysql.sock
+    tmpdir=/opt/bitnami/mariadb/tmp
+    max_allowed_packet=16M
+    bind-address=*
+    pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+    log-error=/opt/bitnami/mariadb/logs/mysqld.log
+    character-set-server=UTF8
+    collation-server=utf8_general_ci
+    slow_query_log=0
+    slow_query_log_file=/opt/bitnami/mariadb/logs/mysqld.log
+    long_query_time=10.0
+    lower_case_table_names=1 
+    log_bin_trust_function_creators=ON
+    character_set_server=utf8
+    innodb_buffer_pool_size=4294967296
+    key_buffer_size=33554432
+    innodb_log_file_size=536870912
+    tmp_table_size=33554432
+    max_heap_table_size=33554432
+    join_buffer_size=2097152
+    query_cache_size=0
+    max_allowed_packet=67108864
+    max_connections=500
+    innodb_log_buffer_size=16777216
+    sort_buffer_size=2097152
+    table_open_cache=2000
+    open_files_limit=16384
+    [client]
+    port=3306
+    socket=/opt/bitnami/mariadb/tmp/mysql.sock
+    default-character-set=UTF8
+    plugin_dir=/opt/bitnami/mariadb/plugin
+    [manager]
+    port=3306
+    socket=/opt/bitnami/mariadb/tmp/mysql.sock
+    pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+
+```
+ 5. Prepare a connection string for access to the MariaDB in format: `db_user/db_user-secret@psnmaria.db.host:3306/persephone-db`.
+
+ The connection string can be passed via the `--set ` option:
+ ````console
+ helm install ... --set env.ENVPSN_MariaDB_ConnectionString="root/MySecret1@mariadb-psnmariadb:3306/persephone"
+ ````
+ or by reference on the Kubernetes secret name. 
+ 
+ ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+ ```console
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webcerberus-mariadb-connection-string
+type: Opaque
+stringData:
+    connection-string: "root/MySecret1@mariadb-psnmariadb:3306/persephone"
+~
+````
+    ***Notification: Any secret name can be used but the key name must be `connection-string`.
+    ***The MariaDB host name here 'mariadb-psnmariadb' compraises on two parts: <release name>-<Value.nameOverride>
+
+Then deploy the above secret file as follows:
+````console
+kubectl apply -f maria-db-ysecret.yaml --namespace psnspace
+````
+where `maria-db-ysecret.yaml` contains the secret definition:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+ name: webcerberus-mariadb-connection-string
+type: Opaque
+stringData:
+   connection-string: "root/MySecret1@mariadb-psnmariadb:3306/persephone"
+```
+ 6. To install the chart with the release name `my-release` in te Kubernetes namespace `psnspace`, run next commands:
+
+```console
+helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
+helm repo update
+helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
+```
+if the MariaDB connection string is in Kubernetes secret and secret's name is in `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`, or:
+```console
+helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
+helm repo update
+helm install my-release persephone-helm/webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret1@mariadb-psnmariadb:3306/persephone" --namespace psnspace
+```
+if the MariaDB connection string is provided as a string parameter.
+
+These commands deploy the latest version of WebCerberus to the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+
+For deploying the Webcerberus of a specific version provide the version string as the Helm install --version parameter. For example, to install the Webcerberus of version 8.1.8518 run the command:
+```console
+helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
+```
+
+7. As an option, the Webcerberus Helm charct can be pulled out, unpackaged and installed by a path to the  unpackaged chart. It may be usefull for develepment or debugging purposes. The unpacked files can be modified and changes easily applied in local environment.
+
+To download release packge run next command:
+
+```console
+helm repo add persephone-helm https://persephonesoft.github.io/webcerberus-helm/
+helm repo update
+
+helm pull persephone-helm/webcerberus --version 8.1.8518
+```
+the package of the specified version (or lates one, if no version is specified) will be downloaded to the current directory:
+
+```console
+PS C:\Download> ls
+
+    Directory: C:\Download
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         7/31/2023   3:26 PM          91393 webcerberus-8.1.8518.tgz
+
+```
+Unpack `webcerberus-8.1.8518.tgz` with any unpacker to your local drive.
+
+```console
+tar -xvzf ./webcerberus-8.1.8518.tgz
+```
+
+Now, the Webcerberus Helm chart is located in folder `./webcerberus` and you can modify any files you need.
+
+
+```console
+helm install lc-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
+```
+or
+
+```console
+helm install lc-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret1@mariadb-psnmariadb:3306/persephone" --namespace psnspace
+```
+
+if the MariaDB connection string is provided as a string parameter.
+
+
+

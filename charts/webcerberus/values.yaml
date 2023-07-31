@@ -42,21 +42,47 @@ containerSecurityContext:
 ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
-  ## @param persistence.storageClass PVC Storage Class for WebCerberus data volume
-  ## If defined, storageClassName: <storageClass>
-  ## If set to "-", storageClassName: "", which disables dynamic provisioning
-  ## If undefined (the default) or set to null, no storageClassName spec is
-  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-  ##   GKE, AWS & OpenStack)
-  ##
-  storageClassName: "default"
-  ## @param persistence.accessModes PVC Access modes
-  ##
-  accessModes:
-    - ReadWriteOnce
-  ## @param persistence.size PVC Storage Request for WebCerberus data volume
-  ##
-  size: 10Gi
+  app:
+    ## @param persistence.app.storageClass PVC Storage Class for WebCerberus data volume
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    storageClassName: default
+    ## @param persistence.app.accessModes PVC Access modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param persistence.app.size PVC Storage Request for WebCerberus data volume
+    ##
+    size: 10Gi
+  blast:
+    ## @param persistence.blast.storageClass PVC Storage Class for the BLAST tool data volume
+    ## The volume can be high performance disk or  
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    gpfs:
+      useGpfs: true
+      storageClassName: gpfs-storage-class ## The existing storage class for GPFS volumes
+      accessModes:
+        - ReadWriteMany
+      volumeMode: Filesystem
+      size: 10Gi
+
+    storageClassName: default
+    ## @param persistence.blast.accessModes PVC Access modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param persistence.blast.size PVC Storage Request for WebCerberus data volume
+    ##
+    size: 10Gi
 
 ## Ingress parameters
 ##
@@ -96,9 +122,9 @@ env:
   ## Make sure you have changed the mounting point if the directories are changed
   #
   ENVPSN_Blast_DB: '/opt/data/BlastDB/openplants'
-  ENVPSN_Blast_ProgramDirectory: '/opt/data/Blast/bin'
+  ENVPSN_Blast_ProgramDirectory: '/opt/blastdata/Blast/bin'
   ENVPSN_User_Data_Directory: '/opt/data/DataUsers'
-  ENVPSN_File_Storage_Path: '/opt/data/FileStorage'
+  ENVPSN_File_Storage_Path: '/opt/blastdata/FileStorage'
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
 
 ## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
@@ -196,7 +222,6 @@ persephoneshell:
 ## volumePermissions: Change the owner and group of the persistent volume(s) mountpoint(s) to 'runAsUser:fsGroup' on each node
 ##
 volumePermissions:
-
   resources:
     limits:
       cpu: 500m
