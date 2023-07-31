@@ -270,7 +270,8 @@ primary:
  ````
  or by reference on the Kubernetes secret name. 
  
- ***Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+ Create a secret `webcerberus-mariadb-connection-string` containing the connection string in a key `connection-string` using the following simple YAML file:
+
  ```console
 apiVersion: v1
 kind: Secret
@@ -353,15 +354,17 @@ Now, the Webcerberus Helm chart is located in folder `./webcerberus` and you can
 
 
 ```console
-helm install lc-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
+helm install my-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
 or
 
 ```console
-helm install lc-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret1@mariadb-psnmariadb:3306/persephone" --namespace psnspace
+helm install my-release C:\Downloads\webcerberus\charts\webcerberus --set imagePullSecrets[0].name=webcerberus-docker-registry-creds,env.ENVPSN_MariaDB_ConnectionString="root/MySecret1@mariadb-psnmariadb:3306/persephone" --namespace psnspace
 ```
 
 if the MariaDB connection string is provided as a string parameter.
+
+The Webcerberus will be installed in your local environment.
 
 
 
