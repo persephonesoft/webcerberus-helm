@@ -66,9 +66,6 @@ spec:
           volumeMounts:
             - name: psn-data
               mountPath: /opt/data
-          {{- if .Values.volumePermissions.resources }}
-          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
-          {{- end }}
             - name: blast-data
               mountPath: /opt/blastdata
           {{- if .Values.volumePermissions.resources }}
@@ -83,13 +80,13 @@ spec:
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
-            {{- if .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
+            {{- if .Values.ENVPSN_MariaDB_ConnectionString }}
+              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
+            {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
                   key: connection-string
-            {{- else }}
-              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             {{- end }}
             - name: ENVPSN_Solr_URL
               value: {{ template "psnservice.solrUrl" . }}
@@ -157,13 +154,13 @@ spec:
           {{- end }}
           env:
             - name: ENVPSN_MariaDB_ConnectionString
-            {{- if .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
+            {{- if .Values.ENVPSN_MariaDB_ConnectionString }}
+              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
+            {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.env_from_secret.ENVPSN_MariaDB_ConnectionString }}
                   key: connection-string
-            {{- else }}
-              value: {{ .Values.env.ENVPSN_MariaDB_ConnectionString }}
             {{- end }}
             - name: ENVPSN_Solr_URL
               value: {{ template "psnservice.solrUrl" . }}
