@@ -32,7 +32,7 @@ kubectl create namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\webcerberus.lic --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Wencerberus images pulling:
+ 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Webcerberus images pulling:
  ```console
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
@@ -171,7 +171,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 See the explanation of the parameters in the file `webcerberus-helm\charts\webcerberus\values.yaml`
 
-## Installing Wencerberus in local environment
+## Installing Webcerberus in local environment
 
 For development, testing or experimental purposes, Webcerberus application can be installed locally. As a local environment can be used the [Minikube](https://kubernetes.io/docs/home/) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for Windows or MacOS only) tools that facilitate running a single-node Kubernetes cluster on a local machine.
 
@@ -188,7 +188,7 @@ kubectl create namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\webcerberus.lic --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Wencerberus images pulling:
+ 3. Create a secret `webcerberus-docker-registry-creds` containing ImagePullSecret for the Webcerberus images pulling:
  ```console
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
