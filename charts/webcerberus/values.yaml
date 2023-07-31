@@ -68,7 +68,7 @@ persistence:
     ##   GKE, AWS & OpenStack)
     ##
     gpfs:
-      useGpfs: false
+      useGpfs: true
       storageClassName: gpfs-storage-class ## The existing storage class for GPFS volumes
       accessModes:
         - ReadWriteMany
