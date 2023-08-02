@@ -59,30 +59,29 @@ persistence:
     ##
     size: 10Gi
   blast:
-    ## @param persistence.blast.storageClass PVC Storage Class for the BLAST tool data volume
-    ## The volume can be high performance disk or  
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
+    ## @param persistence.blast.gpfs.useGpfsPvs defines if the existing Persistent Volumes should be used for the BLAST tool.
     ##
+    ## @param persistence.blast.gpfs.gpfsVolumes provides the PV list.
+    ##
+    ## @param persistence.blast.gpfs.gpfsVolumesMounts is pointing out the volumes mounts.
+    ##
+    ## the 'env:' section below should be updated according to selected mount points.
     gpfs:
-      useGpfs: false
-      storageClassName: gpfs-storage-class ## The existing storage class for GPFS volumes
-      accessModes:
-        - ReadWriteMany
-      volumeMode: Filesystem
-      size: 10Gi
-
-    storageClassName: default
-    ## @param persistence.blast.accessModes PVC Access modes
-    ##
-    accessModes:
-      - ReadWriteOnce
-    ## @param persistence.blast.size PVC Storage Request for WebCerberus data volume
-    ##
-    size: 10Gi
+      useGpfsPvs: true
+      gpfsVolumes:
+      - name: blast-data
+        persistentVolumeClaim:
+          claimName: blast-data-pv-claim-name
+          readOnly: false
+      - name: blast-script
+        persistentVolumeClaim:
+          claimName: blast-script-pv-claim-name
+          readOnly: false
+      gpfsVolumesMounts:
+      - name: blast-data
+        mountPath: /opt/blastdata/mount/point
+      - name: blast-script
+        mountPath: /opt/blastscript/mount/point
 
 ## Ingress parameters
 ##
@@ -122,10 +121,10 @@ env:
   ## Make sure you have changed the mounting point if the directories are changed
   #
   ENVPSN_Blast_DB: '/opt/data/BlastDB/openplants'
-  ENVPSN_Blast_ProgramDirectory: '/opt/blastdata/Blast/bin'
   ENVPSN_User_Data_Directory: '/opt/data/DataUsers'
-  ENVPSN_File_Storage_Path: '/opt/blastdata/FileStorage'
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
+  ENVPSN_Blast_ProgramDirectory: '/opt/blastscript/mount/point'
+  ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
 
 ## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
 ## The secrets must be created in advance.

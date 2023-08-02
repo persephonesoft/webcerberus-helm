@@ -5,7 +5,8 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 8.1.8518-1 (the latest version)
+ - 8.1.8518-2 (the latest version)
+ - 8.1.8518-1
  - 8.1.8518
  - 7.5.8405
 
@@ -98,64 +99,105 @@ For deploying the Webcerberus of a specific version provide the version string a
 helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set imagePullSecrets[0].name=webcerberus-docker-registry-creds --namespace psnspace
 ```
 
-## Mounting the GPFS volume for BLAST operation
+## Mounting an existing GPFS Persistent Volume for BLAST operation
 
 NOTICE: The volume type can not be changed after the chart installation.
 
-Here is an example of using `volumeClaimTemplates` for a GPFS (General Parallel File System) volume in a StatefulSet. Assuming the GPFS storage is already set up and a GPFS-specific storage class (e.g., `gpfs-storage-class`) is already created , it is used in the following configuration:
+Here is an example of using an existing GPFS (General Parallel File System) Persistent Volumes in a StatefulSet. Assuming the GPFS Persistent Volumes `blast-data-pv-claim-name` and `blast-script-pv-claim-name` are already created , they are used in the following configuration:
 
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: my-gpfs-statefulset
+  name: my-release-webcerberus
+  namespace: "psnspace"
+  labels:
+    app: webcerberus
+    chart: webcerberus-8.1.8518-2
+    release: my-release
+    app.kubernetes.io/component: webcerberus
 spec:
-  serviceName: my-service
   replicas: 1
+  serviceName: my-release-webcerberus
   selector:
     matchLabels:
-      app: my-app
+      app.kubernetes.io/component: webcerberus
   template:
     metadata:
       labels:
-        app: my-app
+        app: webcerberus
+        release: my-release
+        app.kubernetes.io/component: webcerberus
     spec:
-      containers:
-        - name: my-container
-          image: my-image:latest
-          ports:
-            - containerPort: 80
-          volumeMounts:
-            - name: data
-              mountPath: /data
       volumes:
-        - name: data
+        ## ...
+        - name: blast-data
           persistentVolumeClaim:
-            claimName: gpfs-pvc
-  volumeClaimTemplates:
-    - metadata:
-        name: gpfs-pvc
-      spec:
-        storageClassName: gpfs-storage-class  # GPFS-specific storage class
-        accessModes:
-          - ReadWriteMany  # GPFS supports ReadWriteMany for shared access
-        resources:
-          requests:
-            storage: 10Gi  # Requested size for each PVC
-        volumeMode: Filesystem
-        # Add any additional GPFS-specific mount options as needed, like vers=4.1
+            claimName: blast-data-pv-claim-name
+            readOnly: false
+        - name: blast-script
+          persistentVolumeClaim:
+            claimName: blast-script-pv-claim-name
+            readOnly: false
+      ## ...
+      containers:
+        - name: webcerberus
+          ## ...
+          env:
+            ## ...
+            - name: ENVPSN_Blast_ProgramDirectory
+              value: /opt/blastscript/mount/point
+            - name: ENVPSN_File_Storage_Path
+              value: /opt/blastdata/mount/point
+            ## ...
+          volumeMounts:
+            # ...
+            - name: blast-data
+              mountPath: /opt/blastdata/mount/point
+            - name: blast-script
+              mountPath: /opt/blastscript/mount/point
 ```
 
 Explanation:
-1. The StatefulSet creates a replica of the pod, with its own PVC.
-2. The `volumeClaimTemplates` section defines a template for creating the PVCs. In this example, we named it `gpfs-pvc`.
-3. The `gpfs-pvc` PVC will be created based on the GPFS-specific storage class (`gpfs-storage-class`) defined in the `storageClassName` field.
-4. The `accessModes` is set to `ReadWriteMany` to allow shared access to the GPFS volume.
-5. `resources.requests.storage` specifies the requested storage size for the PVC (e.g., 10Gi).
-6. The `volumeMode` is set to `Filesystem` to indicate a file system type volume.
+1. The StatefulSet creates a replica of the pod.
+2. In the `volumes` section two volumes are defined by referring to their `persistentVolumeClaim`s: `blast-data` and `blast-script`.
+3. In the `containers` section the volumes are mounted at the specific mount points and environment variables are defined with corresponding paths.
 
 
-The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `storageClassName`, `resources.requests.storage`, and any other mount options according to your GPFS setup and requirements.
+The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `persistence.blast.gpfs.gpfsVolumes`, `persistence.blast.gpfs.gpfsVolumesMounts`, and any other mount options according to your GPFS setup and requirements.
+```yaml
+persistence:
+    ##...
+  blast:
+    ## @param persistence.blast.gpfs.useGpfsPvs defines if the existing Persistent Volumes should be used.
+    ##
+    ## @param persistence.blast.gpfs.gpfsVolumes provides the PV list.
+    ##
+    ## @param persistence.blast.gpfs.gpfsVolumesMounts is pointing out the volumes mounts.
+    ## the 'env:' section below should be updated according to selected mount points.
+    gpfs:
+      useGpfsPvs: true
+      gpfsVolumes:
+      - name: blast-data
+        persistentVolumeClaim:
+          claimName: blast-data-pv-claim-name
+          readOnly: false
+      - name: blast-script
+        persistentVolumeClaim:
+          claimName: blast-script-pv-claim-name
+          readOnly: false
+      gpfsVolumesMounts:
+      - name: blast-data
+        mountPath: /opt/blastdata/mount/point
+      - name: blast-script
+        mountPath: /opt/blastscript/mount/point
+    ## ...
+env:
+  ## ...
+  ENVPSN_Blast_ProgramDirectory: '/opt/blastscript/mount/point'
+  ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
+  ## ...
+```
 
 ## Uninstalling the Chart
 
