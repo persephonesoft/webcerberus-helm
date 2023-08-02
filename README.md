@@ -166,6 +166,7 @@ Explanation:
 
 The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `persistence.blast.gpfs.gpfsVolumes`, `persistence.blast.gpfs.gpfsVolumesMounts`, and any other mount options according to your GPFS setup and requirements.
 ```yaml
+## ...
 persistence:
     ##...
   blast:
