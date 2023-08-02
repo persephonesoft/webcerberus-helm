@@ -160,8 +160,8 @@ spec:
 
 Explanation:
 1. The StatefulSet creates a replica of the pod.
-2. In the `volumes` section two volumes are defined by referrencing on their `persistentVolumeClaim`s: `blast-data` and `blast-script`.
-3. In the `containers` section the volumes are mounted at the specific mountpoints and environment variables are defined with corresponding paths.
+2. In the `volumes` section two volumes are defined by referring to their `persistentVolumeClaim`s: `blast-data` and `blast-script`.
+3. In the `containers` section the volumes are mounted at the specific mount points and environment variables are defined with corresponding paths.
 
 
 The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `persistence.blast.gpfs.gpfsVolumes`, `persistence.blast.gpfs.gpfsVolumesMounts`, and any other mount options according to your GPFS setup and requirements.
