@@ -22,7 +22,7 @@ replicaCount: 1
 podSecurityContext:
   enabled: true
   fsGroup: 1001
-##  fsGroupChangePolicy: "Always"
+  fsGroupChangePolicy: "Always"
 
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
