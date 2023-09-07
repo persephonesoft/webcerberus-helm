@@ -21,6 +21,7 @@ replicaCount: 1
 ##
 podSecurityContext:
   enabled: true
+  runAsUser: 1001
   fsGroup: 1001
   fsGroupChangePolicy: "Always"
 
