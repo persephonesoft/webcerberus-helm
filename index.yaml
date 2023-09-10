@@ -3,20 +3,20 @@ entries:
   webcerberus:
   - apiVersion: v2
     appVersion: "599"
-    created: "2023-09-11T00:14:37.4680405+03:00"
+    created: "2023-09-11T00:23:45.2534963+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
       version: 6.3.x
     description: A Helm chart for Kubernetes
-    digest: 4dee1bdf5e5c33ab37543cdd654f397f4ad7be83a99571bf818df25675b17cb9
+    digest: d723878bb89fe822c92e6f2eccf04a2bcc710ca87c6e6db064856a76feac1918
     name: webcerberus
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-8.3.8648-1.tgz
     version: 8.3.8648-1
   - apiVersion: v2
     appVersion: "597"
-    created: "2023-09-11T00:14:37.452039+03:00"
+    created: "2023-09-11T00:23:45.2444934+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -29,7 +29,7 @@ entries:
     version: 8.3.8648-0
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-11T00:14:37.4272225+03:00"
+    created: "2023-09-11T00:23:45.2344936+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -42,7 +42,7 @@ entries:
     version: 8.1.8518
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-11T00:14:37.4046655+03:00"
+    created: "2023-09-11T00:23:45.2244936+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -55,7 +55,7 @@ entries:
     version: 8.1.8518-2
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-11T00:14:37.3702854+03:00"
+    created: "2023-09-11T00:23:45.2154944+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -68,7 +68,7 @@ entries:
     version: 8.1.8518-1
   - apiVersion: v2
     appVersion: "578"
-    created: "2023-09-11T00:14:37.3353618+03:00"
+    created: "2023-09-11T00:23:45.2047289+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -79,4 +79,4 @@ entries:
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-7.5.8405.tgz
     version: 7.5.8405
-generated: "2023-09-11T00:14:37.2886278+03:00"
+generated: "2023-09-11T00:23:45.1930442+03:00"
