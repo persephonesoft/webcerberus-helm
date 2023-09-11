@@ -6,7 +6,7 @@ This Helm Chart has been configured to pull the Container Images from the Docker
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
  - 8.3.8648-0 (the latest version)
-     Fixed permission issue with changing user id in the pod security context
+     Fixed permission issue with changing user id in the pod security context.
  - 8.1.8518-2
  - 8.1.8518-1
  - 8.1.8518
@@ -166,8 +166,15 @@ Explanation:
 3. In the `containers` section the volumes are mounted at the specific mount points and environment variables are defined with corresponding paths.
 
 
-The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `persistence.blast.gpfs.gpfsVolumes`, `persistence.blast.gpfs.gpfsVolumesMounts`, and any other mount options according to your GPFS setup and requirements.
+The GPFS volume parameters can be configured via the `persistence.blast.gpfs` section of the Helm Value file. To make the Webcerberus deployment to use GPFS volume set `persistence.blast.gpfs.useGpfs: true`. Please make sure to adjust the `persistence.blast.gpfs.gpfsVolumes`, `persistence.blast.gpfs.gpfsVolumesMounts`, and any other mount options according to your GPFS setup and requirements. Don't forget to change the `podSecutiryContext` section parameters according to granted permissions on the GPFS volume file system.
 ```yaml
+## ...
+podSecurityContext:
+  enabled: true
+  runAsUser: 32001  ## Change to user ID of the User having appropriate permissions on the GPFS volume
+  runAsGroup: 32001 ## Change to user ID of the Group having appropriate permissions on the GPFS volume
+  fsGroup: 32001    ## Change to group ID of the Group having appropriate permissions on the GPFS volume
+  fsGroupChangePolicy: "Always"
 ## ...
 persistence:
     ##...
