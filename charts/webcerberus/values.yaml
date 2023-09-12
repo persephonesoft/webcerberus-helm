@@ -228,7 +228,7 @@ volumePermissions:
     enabled: false
     runAsUser: 0
     privileged: true
-    allowPrivilegeEscalation: false
+    allowPrivilegeEscalation: true
 
 imagePullSecrets: []
   # Optionally specify an array of imagePullSecrets.

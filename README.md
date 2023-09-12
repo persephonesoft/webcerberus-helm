@@ -105,6 +105,8 @@ helm install my-release persephone-helm/webcerberus --version 8.1.8518 --set ima
 
 NOTICE: The volume type can not be changed after the chart installation.
 
+NOTICE: If the podSecurityContext has been changed to comply with file system permissions on the existing GPFS volume the migration procedure should be performed to preserve persistent volumes. See the section below for details.
+
 Here is an example of using an existing GPFS (General Parallel File System) Persistent Volumes in a StatefulSet. Assuming the GPFS Persistent Volumes `blast-data-pv-claim-name` and `blast-script-pv-claim-name` are already created , they are used in the following configuration:
 
 ```yaml
@@ -208,6 +210,27 @@ env:
   ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
   ## ...
 ```
+
+## Procedure of the migration to other pod security context
+
+In case of changing the statefullSet security context, to preserve persistent volumes the file system permission should be updated. To change permission on the existing (already created during the application installation) persistent volume the initialization container should be running once under the root user. This possibility is provided by switching on the containerSecurityContext:
+```yaml
+## ...
+  ## Init container' Security Context
+  ## Note: the chown of the data folder is done to containerSecurityContext.runAsUser
+  ## and not the below volumePermissions.containerSecurityContext.runAsUser
+  ## @param volumePermissions.containerSecurityContext.runAsUser User ID for the init container
+  ##
+  containerSecurityContext:
+    enabled: true ## This is switching on the initContainer containerSecurityContext
+    runAsUser: 0
+    privileged: true
+    allowPrivilegeEscalation: true
+  ## ...
+```
+By default the `containerSecurityContext` is disabled: `volumePermissions.containerSecurityContext.enabled=false`
+
+If the Kubernetes PodSecurityPolicy/PodSecurity Admission denies running containers under the root user the application's persistent volumes should be recreated.
 
 ## Uninstalling the Chart
 
