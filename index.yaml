@@ -2,8 +2,21 @@ apiVersion: v1
 entries:
   webcerberus:
   - apiVersion: v2
+    appVersion: 8.6.8825
+    created: "2024-03-13T16:41:09.109102+02:00"
+    dependencies:
+    - name: solr
+      repository: https://charts.bitnami.com/bitnami
+      version: 6.3.x
+    description: A Helm chart for Kubernetes
+    digest: 0ebebc7b94152ab5085da1bffcdf514379ed39302172c391550d883313b91924
+    name: webcerberus
+    urls:
+    - https://persephonesoft.github.io/webcerberus-helm/webcerberus-8.6.8825.tgz
+    version: 8.6.8825
+  - apiVersion: v2
     appVersion: "599"
-    created: "2023-09-12T13:12:54.5673695+03:00"
+    created: "2024-03-13T16:41:09.1051016+02:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -16,7 +29,7 @@ entries:
     version: 8.3.8648-0
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-12T13:12:54.5577929+03:00"
+    created: "2024-03-13T16:41:09.0991107+02:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -29,7 +42,7 @@ entries:
     version: 8.1.8518
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-12T13:12:54.5497577+03:00"
+    created: "2024-03-13T16:41:09.0950499+02:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -42,7 +55,7 @@ entries:
     version: 8.1.8518-2
   - apiVersion: v2
     appVersion: "583"
-    created: "2023-09-12T13:12:54.5387768+03:00"
+    created: "2024-03-13T16:41:09.0898176+02:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -55,7 +68,7 @@ entries:
     version: 8.1.8518-1
   - apiVersion: v2
     appVersion: "578"
-    created: "2023-09-12T13:12:54.5307282+03:00"
+    created: "2024-03-13T16:41:09.084639+02:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -66,4 +79,4 @@ entries:
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-7.5.8405.tgz
     version: 7.5.8405
-generated: "2023-09-12T13:12:54.5188232+03:00"
+generated: "2024-03-13T16:41:09.0789161+02:00"

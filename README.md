@@ -5,7 +5,8 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 8.3.8648-0 (the latest version)
+ - 8.6.8825 (the latest version)
+ - 8.3.8648-0
      Fixed permission issue with changing user id in the pod security context.
  - 8.1.8518-2
  - 8.1.8518-1
