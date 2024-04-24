@@ -101,6 +101,8 @@ spec:
               value: {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
             - name: ENVPSN_Temp_Directory
               value: {{ .Values.env.ENVPSN_Temp_Directory }}
+            - name: ENVPSN_OpenIdProvider
+              value: {{ .Values.env.ENVPSN_OpenIdProvider }}
           ports:
             - name: http
               containerPort: {{ .Values.webcerberus.deployment.containerPort }}
