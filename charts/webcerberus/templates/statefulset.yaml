@@ -151,7 +151,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["sleep","90"]
+                command: ["sleep","20"]
         - name: persephoneshell
           image: "{{ template "persephoneshell.imageName" . }}"
           imagePullPolicy: {{ .Values.persephoneshell.image.pullPolicy }}
