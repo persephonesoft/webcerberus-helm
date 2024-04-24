@@ -1,8 +1,8 @@
 apiVersion: v2
-appVersion: dev
+appVersion: 9.0.8880
 description: A Helm chart for Kubernetes
 name: webcerberus
-version: dev
+version: 9.0.8880
 
 dependencies:
   - name: solr
