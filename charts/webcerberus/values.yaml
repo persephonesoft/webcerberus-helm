@@ -115,7 +115,7 @@ env:
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
   ENVPSN_Blast_ProgramDirectory: '/opt/blastscript/mount/point'
   ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
-  ENVPSN_OpenIdEnabled: 'false'
+  ENVPSN_OpenIdEnabled: ''
   ENVPSN_OpenIdProvider: ''
   ENVPSN_OpenIdSecureURL: ''
   ENVPSN_OpenIdSuccessURL: ''
