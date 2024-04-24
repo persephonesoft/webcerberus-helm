@@ -115,7 +115,11 @@ env:
   ENVPSN_Sequence_Storage_Path: '/opt/data/SequenceStorage'
   ENVPSN_Blast_ProgramDirectory: '/opt/blastscript/mount/point'
   ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
+  ENVPSN_OpenIdEnabled: 'false'
   ENVPSN_OpenIdProvider: ''
+  ENVPSN_OpenIdSecureURL: ''
+  ENVPSN_OpenIdSuccessURL: ''
+  
 
 ## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
 ## The secrets must be created in advance.

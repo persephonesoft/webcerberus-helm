@@ -103,6 +103,12 @@ spec:
               value: {{ .Values.env.ENVPSN_Temp_Directory }}
             - name: ENVPSN_OpenIdProvider
               value: {{ .Values.env.ENVPSN_OpenIdProvider }}
+            - name: ENVPSN_OpenIdEnabled
+              value: {{ .Values.env.ENVPSN_OpenIdEnabled }}
+            - name: ENVPSN_OpenIdSuccessURL
+              value: {{ .Values.env.ENVPSN_OpenIdSuccessURL }}
+            - name: ENVPSN_OpenIdSecureURL
+              value: {{ .Values.env.ENVPSN_OpenIdSecureURL }}
           ports:
             - name: http
               containerPort: {{ .Values.webcerberus.deployment.containerPort }}
