@@ -327,6 +327,8 @@ primary:
     sort_buffer_size=2097152
     table_open_cache=2000
     open_files_limit=16384
+    net_write_timeout=3600
+    net_read_timeout=3600
     [client]
     port=3306
     socket=/opt/bitnami/mariadb/tmp/mysql.sock
