@@ -5,7 +5,9 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 9.1.8915 (the latest version)
+ - 9.1.8921 (the latest version)
+	- Remove "email" login provider
+ - 9.1.8915 
 	- New Feature: Variant distances for region
 	- Redesign: Export sequences 
 	- Core changes: Change track settings in storage
