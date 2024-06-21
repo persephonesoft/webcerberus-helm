@@ -3,7 +3,7 @@ entries:
   webcerberus:
   - apiVersion: v2
     appVersion: 9.1.8930_debug
-    created: "2024-06-21T13:58:23.6900859+03:00"
+    created: "2024-06-21T14:48:43.3598269+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -16,20 +16,20 @@ entries:
     version: 9.1.89300
   - apiVersion: v2
     appVersion: 9.1.8938
-    created: "2024-06-21T13:58:23.6950873+03:00"
+    created: "2024-06-21T14:48:43.3658263+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
       version: 6.3.x
     description: A Helm chart for Kubernetes
-    digest: 29790477be9f8cc4d4455f4cda1618aa5841fbb1e9456ae350ea52829677af4a
+    digest: 2733c91cb107518665418acd37270fc3ae5eab058a40f90bb579aff6bfb3231f
     name: webcerberus
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-9.1.8938.tgz
     version: 9.1.8938
   - apiVersion: v2
     appVersion: 9.1.8930
-    created: "2024-06-21T13:58:23.6860873+03:00"
+    created: "2024-06-21T14:48:43.3558267+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -42,7 +42,7 @@ entries:
     version: 9.1.8930
   - apiVersion: v2
     appVersion: 9.1.8930_debug
-    created: "2024-06-21T13:58:23.6810872+03:00"
+    created: "2024-06-21T14:48:43.3508263+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -55,7 +55,7 @@ entries:
     version: 9.1.8930-0
   - apiVersion: v2
     appVersion: 9.1.8921
-    created: "2024-06-21T13:58:23.6760884+03:00"
+    created: "2024-06-21T14:48:43.3468262+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -68,7 +68,7 @@ entries:
     version: 9.1.8921
   - apiVersion: v2
     appVersion: 9.1.8915
-    created: "2024-06-21T13:58:23.6710885+03:00"
+    created: "2024-06-21T14:48:43.3418263+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -81,7 +81,7 @@ entries:
     version: 9.1.8915
   - apiVersion: v2
     appVersion: 9.0.8901
-    created: "2024-06-21T13:58:23.6650759+03:00"
+    created: "2024-06-21T14:48:43.3368263+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -94,7 +94,7 @@ entries:
     version: 9.0.8901
   - apiVersion: v2
     appVersion: 9.0.8880
-    created: "2024-06-21T13:58:23.6605561+03:00"
+    created: "2024-06-21T14:48:43.3318264+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -107,7 +107,7 @@ entries:
     version: 9.0.8880
   - apiVersion: v2
     appVersion: 8.6.8825
-    created: "2024-06-21T13:58:23.6535555+03:00"
+    created: "2024-06-21T14:48:43.327826+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -120,7 +120,7 @@ entries:
     version: 8.6.8825
   - apiVersion: v2
     appVersion: "599"
-    created: "2024-06-21T13:58:23.6480405+03:00"
+    created: "2024-06-21T14:48:43.3227624+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -133,7 +133,7 @@ entries:
     version: 8.3.8648-0
   - apiVersion: v2
     appVersion: "583"
-    created: "2024-06-21T13:58:23.6418264+03:00"
+    created: "2024-06-21T14:48:43.3180007+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -146,7 +146,7 @@ entries:
     version: 8.1.8518
   - apiVersion: v2
     appVersion: "583"
-    created: "2024-06-21T13:58:23.6365323+03:00"
+    created: "2024-06-21T14:48:43.3122804+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -159,7 +159,7 @@ entries:
     version: 8.1.8518-2
   - apiVersion: v2
     appVersion: "583"
-    created: "2024-06-21T13:58:23.6305351+03:00"
+    created: "2024-06-21T14:48:43.3075883+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -172,7 +172,7 @@ entries:
     version: 8.1.8518-1
   - apiVersion: v2
     appVersion: "578"
-    created: "2024-06-21T13:58:23.6252115+03:00"
+    created: "2024-06-21T14:48:43.3029057+03:00"
     dependencies:
     - name: solr
       repository: https://charts.bitnami.com/bitnami
@@ -183,4 +183,4 @@ entries:
     urls:
     - https://persephonesoft.github.io/webcerberus-helm/webcerberus-7.5.8405.tgz
     version: 7.5.8405
-generated: "2024-06-21T13:58:23.6188439+03:00"
+generated: "2024-06-21T14:48:43.2971768+03:00"
