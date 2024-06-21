@@ -119,6 +119,7 @@ env:
   ENVPSN_OpenIdProvider: ''
   ENVPSN_OpenIdSecureURL: ''
   ENVPSN_OpenIdSuccessURL: ''
+  ENVPSN_AllowAnonymousLogin: "'true'"
 
 ## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
 ## The secrets must be created in advance.

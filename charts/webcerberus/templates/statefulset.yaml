@@ -109,6 +109,8 @@ spec:
               value: {{ .Values.env.ENVPSN_OpenIdSuccessURL }}
             - name: ENVPSN_OpenIdSecureURL
               value: {{ .Values.env.ENVPSN_OpenIdSecureURL }}
+            - name: ENVPSN_AllowAnonymousLogin
+              value: {{ .Values.env.ENVPSN_AllowAnonymousLogin }}
           ports:
             - name: http
               containerPort: {{ .Values.webcerberus.deployment.containerPort }}
