@@ -30,6 +30,11 @@ spec:
         - name: webcerberus-license
           secret:
             secretName: webcerberus-license
+        {{- if .Values.custom_config.custom_config_from_secret }}
+        - name: persephone-custom-config
+          secret:
+            secretName: persephone-custom-config
+        {{- end }}
         - name: data-temp
           emptyDir: {}
       {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
@@ -55,13 +60,6 @@ spec:
             - -ec
             - |
               find /opt/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }}
-              mkdir -p {{ .Values.env.ENVPSN_Blast_DB }}
-              mkdir -p {{ .Values.env.ENVPSN_User_Data_Directory }}
-              mkdir -p {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
-          {{- if eq .Values.persistence.blast.gpfs.useGpfsPvs false }}
-              mkdir -p {{ .Values.env.ENVPSN_Blast_ProgramDirectory }}
-              mkdir -p {{ .Values.env.ENVPSN_File_Storage_Path }}
-          {{- end }}
           volumeMounts:
             - name: psn-data
               mountPath: /opt/data
@@ -125,6 +123,12 @@ spec:
               mountPath: /home/appuser/app/webcerberus.lic
               subPath: webcerberus.lic
               readOnly: true
+            {{- if .Values.custom_config.custom_config_from_secret }}
+            - name: persephone-custom-config
+              mountPath: /home/appuser/app/custom.config
+              subPath: custom.config
+              readOnly: true
+            {{- end }}
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
             {{- toYaml .Values.persistence.blast.gpfs.gpfsVolumesMounts | nindent 12 }}
             {{- end }}
@@ -195,6 +199,12 @@ spec:
               mountPath: /opt/data
             - name: data-temp
               mountPath: /data
+            {{- if .Values.custom_config.custom_config_from_secret }}
+            - name: persephone-custom-config
+              mountPath: /home/appuser/app/custom.config
+              subPath: custom.config
+              readOnly: true
+            {{- end }}
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
             {{- toYaml .Values.persistence.blast.gpfs.gpfsVolumesMounts | nindent 12 }}
             {{- end }}

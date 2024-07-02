@@ -120,6 +120,15 @@ env:
   ENVPSN_OpenIdSecureURL: ''
   ENVPSN_OpenIdSuccessURL: ''
   ENVPSN_AllowAnonymousLogin: "'true'"
+  
+##
+## If you want to use the application custom.config from secret:
+##     create secret "persephone-custom-config" from file like:
+##        kubectl create secret generic persephone-custom-config --from-file C:\YourPath\to\custom.config  --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
+##     set param custom_config.custom_config_from_secret to "true" 
+##
+custom_config:
+  custom_config_from_secret: false
 
 ## @param env_from_secret.ENVPSN_Variable_Name is containing secret name with environment variables value to add to WebCerberus node
 ## The secrets must be created in advance.

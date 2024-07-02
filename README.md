@@ -77,7 +77,12 @@ kubectl apply -f maria-db-ysecret.yaml --namespace psnspace
 
 Point out the secret's name in the Helm parameter `.Value.env_from_secret.ENVPSN_MariaDB_ConnectionString`. If the secrte name is empty (is not provided), the `.Value.env.ENVPSN_MariaDB_ConnectionString` will be used.
 
-5. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
+ 5. (Optional) If you a planing to use the application custom-config from a secret please create secret `persephone-custom-config`:
+ ```console
+kubectl create secret generic persephone-custom-config --from-file C:\YourPath\to\custom.config  --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
+```
+
+ 6. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
  ```console
 openssl pkcs12 -in pfx-filename.pfx -nocerts -out key-filename.key
 openssl rsa -in key-filename.key -out key-filename-decrypted.key
