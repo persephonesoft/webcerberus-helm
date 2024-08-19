@@ -81,6 +81,7 @@ Point out the secret's name in the Helm parameter `.Value.env_from_secret.ENVPSN
  ```console
 kubectl create secret generic persephone-custom-config --from-file C:\YourPath\to\custom.config  --namespace psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
+Set .Values.custom_config.custom_config_from_secret=true in the Value file
 
  6. (Optional) Cerate the Kubernetes secret containing the Ingress TLS certificate from .pfx-file:
  ```console
