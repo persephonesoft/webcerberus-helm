@@ -1,8 +1,8 @@
 apiVersion: v2
-appVersion: 9.1.8949
+appVersion: 9.3.9014
 description: A Helm chart for Kubernetes
 name: webcerberus
-version: 9.1.8949
+version: 9.3.9014
 
 
 dependencies:
