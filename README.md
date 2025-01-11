@@ -283,12 +283,10 @@ kubectl create secret generic webcerberus-license --from-file A:\Path\To_your\we
 kubectl create secret docker-registry webcerberus-docker-registry-creds --docker-server=https://index.docker.io/v1/ --docker-username=persephonesoft --docker-password=<put_your_password_here> --docker-email=mkravchuk@persephonesoft.com -n psnspace --dry-run=client -o yaml | kubectl apply -f -
 ```
 
- 4. The  MariaDB database can be installed in the same namespace from any public repo.As an example, the MariaDB 
+ 4. The  MariaDB database can be installed in the same namespace from any public repo. Point out the MariaDB version via the image tag 'image.tag=X.Y.Z'. As an example, the MariaDB of version 10.11.10 will be installed by the next command: 
 
 ```console
-helm repo add azure-marketplace https://marketplace.azurecr.io/helm/v1/repo
-helm repo update
-helm install mariadb azure-marketplace/mariadb --namespace psnspace --set architecture=standalone,auth.rootPassword="MySecret1",auth.database=persephone,primary.persistence.enabled=true -f 'A:\Path\To\\mariadb-helm-values.yaml'
+helm install mariadb oci://registry-1.docker.io/bitnamicharts/mariadb --namespace psnspace --set image.tag=10.11.10,architecture=standalone,auth.rootPassword="MySecret1",auth.database=persephone,primary.persistence.enabled=true -f 'A:\Path\To\\mariadb-helm-values.yaml'
 ```
 where release name is `mariadb`, `mariadb-helm-values.yaml` contains custom configuration required by Webcerberus:
 
