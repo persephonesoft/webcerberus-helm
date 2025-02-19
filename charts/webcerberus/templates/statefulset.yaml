@@ -201,7 +201,7 @@ spec:
               mountPath: /data
             {{- if .Values.custom_config.custom_config_from_secret }}
             - name: persephone-custom-config
-              mountPath: /home/appuser/app/custom.config
+              mountPath: /home/pshuser/app/custom.config
               subPath: custom.config
               readOnly: true
             {{- end }}
