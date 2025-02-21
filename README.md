@@ -226,17 +226,6 @@ env:
   ## ...
 ```
 
-## Using a Custom CA Certificate for BLAST Operations
-
-BLAST operations can be performed on external BLAST farms. When making remote calls to these farms, the communication channel can be secured using the SSL protocol with an SSL certificate issued by a private Certificate Authority (CA).
-
-If the SSL certificate is signed by a private CA, you must install the corresponding custom CA certificate in the application containers to enable proper SSL certificate validation.
-
-There is only option to mount the CA certificate form a secret. Set `blast.custom-ca.useCustomCA' to `true` and provide the secret name in the parameter `blast.custom-ca.secretName`. The secret must be created in advance.
-
-Here's an improved and more user-friendly **README** section for using a custom CA certificate in BLAST operations:  
-
----
 
 ## Using a Custom CA Certificate for BLAST Operations
 
