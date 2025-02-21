@@ -254,12 +254,36 @@ To configure the application to use a custom CA certificate:
 
 Before deploying, create a Kubernetes Secret that contains your CA certificate:  
 
-```sh
+```
+sh
 kubectl create secret generic <your-secret-name> --from-file=ca.crt=<path-to-your-ca-cert.crt> -n psnspace
 ```
 
 This ensures the certificate is securely stored and available for the application.  
 
+## Test SSL Connection Using the Custom CA
+If your application uses tools like curl, wget, or openssl, test if they can trust the certificate.
+
+Using openssl
+Check if OpenSSL recognizes the CA:
+````
+sh
+openssl s_client -connect <service-hostname>:443 -CAfile /etc/ssl/certs/custom-ca.crt
+````
+If the certificate is trusted, you should see:
+```
+Verify return code: 0 (ok)
+```
+If there's an issue, you'll see a certificate verification failure.
+
+Using curl
+Try making a request:
+```
+sh
+curl --cacert /etc/ssl/certs/custom-ca.crt https://<service-url>
+```
+If successful, the CA is available and trusted.
+If you get an SSL error, it may indicate that the CA certificate is missing or invalid.
 
 ## Procedure of the migration to other pod security context
 
