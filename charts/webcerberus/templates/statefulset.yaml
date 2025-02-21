@@ -38,7 +38,7 @@ spec:
         {{- if .Values.blast.custom-ca.useCustomCA }}
         - name: blast-service-custom-ca
           secret:
-            secretName: {{- if .Values.blast.custom-ca.secretName }}
+            secretName: {{ .Values.blast.custom-ca.secretName }}
         {{- end }}
         - name: data-temp
           emptyDir: {}
