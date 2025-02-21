@@ -65,7 +65,14 @@ spec:
             - -ec
             - |
               find /opt/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }}
+              cp /etc/ssl/certs/blast-custom-ca.crt /usr/local/share/ca-certificates/blast-custom-ca.crt && update-ca-certificates
           volumeMounts:
+            {{- if .Values.blast.custom-ca.useCustomCA }}
+            - name: blast-service-custom-ca
+              mountPath: /etc/ssl/certs/blast-custom-ca.crt
+              subPath: ca.crt
+              readOnly: true
+            {{- end }}
             - name: psn-data
               mountPath: /opt/data
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
