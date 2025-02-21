@@ -143,7 +143,7 @@ env_from_secret:
 blast:
     ## Configuring the custom CA certificate for the BLAST tool from the secret
     ## The secret must be created in advance.
-    custom-ca:
+    customCA:
       useCustomCA: false
       secretName: blast-service-custom-ca
 
