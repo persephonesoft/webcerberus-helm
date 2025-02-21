@@ -35,6 +35,11 @@ spec:
           secret:
             secretName: persephone-custom-config
         {{- end }}
+        {{- if .Values.blast.custom-ca.useCustomCA }}
+        - name: blast-service-custom-ca
+          secret:
+            secretName: {{- if .Values.blast.custom-ca.secretName }}
+        {{- end }}
         - name: data-temp
           emptyDir: {}
       {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
@@ -132,6 +137,12 @@ spec:
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
             {{- toYaml .Values.persistence.blast.gpfs.gpfsVolumesMounts | nindent 12 }}
             {{- end }}
+            {{- if .Values.blast.custom-ca.useCustomCA }}
+            - name: blast-service-custom-ca
+              mountPath: /etc/ssl/certs/blast-custom-ca.crt
+              subPath: ca.crt
+              readOnly: true
+            {{- end }}
           {{- if .Values.webcerberus.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
@@ -203,6 +214,12 @@ spec:
             - name: persephone-custom-config
               mountPath: /home/pshuser/app/custom.config
               subPath: custom.config
+              readOnly: true
+            {{- end }}
+            {{- if .Values.blast.custom-ca.useCustomCA }}
+            - name: blast-service-custom-ca
+              mountPath: /etc/ssl/certs/blast-custom-ca.crt
+              subPath: ca.crt
               readOnly: true
             {{- end }}
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}

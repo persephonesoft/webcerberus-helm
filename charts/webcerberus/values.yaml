@@ -138,6 +138,15 @@ env_from_secret:
   ##
   ENVPSN_MariaDB_ConnectionString: webcerberus-mariadb-connection-string
 
+## Section of the BLAST operation parameters
+## 
+blast:
+    ## Configuring the custom CA certificate for the BLAST tool from the secret
+    ## The secret must be created in advance.
+    custom-ca:
+      useCustomCA: false
+      secretName: blast-service-custom-ca
+
 ## Section of the WebCerberus container parameters
 ## 
 webcerberus:
