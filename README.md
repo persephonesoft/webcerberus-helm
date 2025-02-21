@@ -260,9 +260,6 @@ kubectl create secret generic <your-secret-name> --from-file=ca.crt=<path-to-you
 
 This ensures the certificate is securely stored and available for the application.  
 
----
-
-This version improves readability, clarifies the process, and provides step-by-step instructions for users. 🚀 Let me know if you'd like any refinements!
 
 ## Procedure of the migration to other pod security context
 
