@@ -88,7 +88,7 @@ Set .Values.custom_config.custom_config_from_secret=true in the Value file
 openssl pkcs12 -in pfx-filename.pfx -nocerts -out key-filename.key
 openssl rsa -in key-filename.key -out key-filename-decrypted.key
 openssl pkcs12 -in pfx-filename.pfx -clcerts -nokeys -out crt-filename.crt  ##remove clcerts to get the full chain in your cert
-kubectl create secret tls your-tls-secret-name --cert crt-filename.crt --key key-filename-decrypted.key
+kubectl create secret tls your-tls-secret-name --cert crt-filename.crt --key key-filename-decrypted.key -n psnspace
 ```
 The secret name `your-tls-secret-name` is used in the `ingresses.webcernerus.tls` section of the Helm value file. By default, the section is commented and the ingress service for Webcerberus will be created in HTTTP mode only.
 
@@ -225,6 +225,41 @@ env:
   ENVPSN_File_Storage_Path: '/opt/blastdata/mount/point'
   ## ...
 ```
+
+
+## Using a Custom CA Certificate for BLAST Operations
+
+BLAST operations can be executed on external BLAST farms. To ensure secure communication, these remote calls use the **SSL protocol** with certificates issued by a private Certificate Authority (CA).  
+
+If the SSL certificate is signed by a private CA, you must install the corresponding custom CA certificate in the application containers to enable proper SSL validation.  
+
+### How to Use a Custom CA Certificate
+
+To configure the application to use a custom CA certificate:  
+
+1. Enable the custom CA feature
+   - Set the following parameter in your configuration:  
+     ```yaml
+     blast.custom-ca.useCustomCA: true
+     ```
+
+2. Provide the CA certificate as a Kubernetes Secret
+   - The CA certificate must be stored in a Kubernetes Secret **before** deploying the application.  
+   - Specify the Secret name in the configuration:  
+     ```yaml
+     blast.custom-ca.secretName: <your-secret-name>
+     ```  
+
+### Creating the Kubernetes Secret
+
+Before deploying, create a Kubernetes Secret that contains your CA certificate:  
+
+```sh
+kubectl create secret generic <your-secret-name> --from-file=ca.crt=<path-to-your-ca-cert.crt> -n psnspace
+```
+
+This ensures the certificate is securely stored and available for the application.  
+
 
 ## Procedure of the migration to other pod security context
 
