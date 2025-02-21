@@ -65,11 +65,10 @@ spec:
             - -ec
             - |
               find /opt/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }}
-              cp /etc/ssl/certs/blast-custom-ca.crt /usr/local/share/ca-certificates/blast-custom-ca.crt && update-ca-certificates
           volumeMounts:
             {{- if .Values.blast.customCA.useCustomCA }}
             - name: blast-service-custom-ca
-              mountPath: /etc/ssl/certs/blast-custom-ca.crt
+              mountPath: /usr/local/share/ca-certificates/blast-custom-ca.crt
               subPath: ca.crt
               readOnly: true
             {{- end }}
@@ -81,6 +80,13 @@ spec:
           {{- if .Values.volumePermissions.resources }}
           resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
           {{- end }}
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                - sh
+                - -c
+                - sleep 10; update-ca-certificates
       containers:
         - name: webcerberus
           image: "{{ template "webcerberus.imageName" . }}"
