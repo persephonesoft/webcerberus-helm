@@ -66,12 +66,6 @@ spec:
             - |
               find /opt/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs -r chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }}
           volumeMounts:
-            {{- if .Values.blast.customCA.useCustomCA }}
-            - name: blast-service-custom-ca
-              mountPath: /usr/local/share/ca-certificates/blast-custom-ca.crt
-              subPath: ca.crt
-              readOnly: true
-            {{- end }}
             - name: psn-data
               mountPath: /opt/data
             {{- if .Values.persistence.blast.gpfs.useGpfsPvs }}
@@ -80,13 +74,6 @@ spec:
           {{- if .Values.volumePermissions.resources }}
           resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
           {{- end }}
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                - sh
-                - -c
-                - sleep 10; update-ca-certificates
       containers:
         - name: webcerberus
           image: "{{ template "webcerberus.imageName" . }}"
@@ -127,6 +114,10 @@ spec:
               value: {{ .Values.env.ENVPSN_OpenIdSecureURL }}
             - name: ENVPSN_AllowAnonymousLogin
               value: {{ .Values.env.ENVPSN_AllowAnonymousLogin }}
+            {{- if .Values.blast.customCA.useCustomCA }}
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/blast-custom-ca.crt
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.webcerberus.deployment.containerPort }}
@@ -211,6 +202,10 @@ spec:
               value: {{ .Values.env.ENVPSN_Sequence_Storage_Path }}
             - name: ENVPSN_Temp_Directory
               value: {{ .Values.env.ENVPSN_Temp_Directory }}
+            {{- if .Values.blast.customCA.useCustomCA }}
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/blast-custom-ca.crt
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.persephoneshell.deployment.containerPort }}
