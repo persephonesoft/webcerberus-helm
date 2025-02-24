@@ -284,7 +284,7 @@ Try making a request:
 sh
 curl --cacert /etc/ssl/certs/blast-custom-ca.crt https://<service-url>
 ```
-If the `SSL_CERT_FILE` environment variable is set, it is used as the --cacert value. If successful, the CA is available and trusted. If you get an SSL error, it may indicate that the CA certificate is missing or invalid.
+If the `SSL_CERT_FILE` environment variable is set, it is used as the `--cacert` value. If successful, the CA is available and trusted. If you get an SSL error, it may indicate that the CA certificate is missing or invalid.
 
 ## Procedure of the migration to other pod security context
 
