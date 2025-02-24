@@ -229,7 +229,7 @@ env:
 
 ## Using a Custom CA Certificate for BLAST Operations
 
-BLAST operations can be executed on external BLAST farms. To ensure secure communication, these remote calls use the **SSL protocol** with certificates issued by a private Certificate Authority (CA).  
+BLAST operations can be executed on external BLAST farms. To ensure secure communication, these remote calls use the **SSL protocol** with certificates issued by a private Certificate Authority (CA).
 
 If the SSL certificate is signed by a private CA, you must install the corresponding custom CA certificate in the application containers to enable proper SSL validation.  
 
@@ -248,7 +248,9 @@ To configure the application to use a custom CA certificate:
    - Specify the Secret name in the configuration:  
      ```yaml
      blast.custom-ca.secretName: <your-secret-name>
-     ```  
+     ```
+
+The secret will be mounted in containers at the path `/etc/ssl/certs/blast-custom-ca.crt`. Additionally, the environment variable `SSL_CERT_FILE=/etc/ssl/certs/blast-custom-ca.crt` will be set.
 
 ### Creating the Kubernetes Secret
 
@@ -268,7 +270,7 @@ Using openssl
 Check if OpenSSL recognizes the CA:
 ````
 sh
-openssl s_client -connect <service-hostname>:443 -CAfile /etc/ssl/certs/custom-ca.crt
+openssl s_client -connect <service-hostname>:443 -CAfile /etc/ssl/certs/blast-custom-ca.crt
 ````
 If the certificate is trusted, you should see:
 ```
@@ -280,10 +282,9 @@ Using curl
 Try making a request:
 ```
 sh
-curl --cacert /etc/ssl/certs/custom-ca.crt https://<service-url>
+curl --cacert /etc/ssl/certs/blast-custom-ca.crt https://<service-url>
 ```
-If successful, the CA is available and trusted.
-If you get an SSL error, it may indicate that the CA certificate is missing or invalid.
+If the `SSL_CERT_FILE` environment variable is set, it is used as the --cacert value. If successful, the CA is available and trusted. If you get an SSL error, it may indicate that the CA certificate is missing or invalid.
 
 ## Procedure of the migration to other pod security context
 
