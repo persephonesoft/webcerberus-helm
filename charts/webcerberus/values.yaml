@@ -141,11 +141,11 @@ env_from_secret:
 ## Section of the BLAST operation parameters
 ## 
 blast:
-    ## Configuring the custom CA certificate for the BLAST tool from the secret
-    ## The secret must be created in advance.
-    customCA:
-      useCustomCA: false
-      secretName: blast-service-custom-ca
+  ## Configuring the custom CA certificate for the BLAST tool from the secret
+  ## The secret must be created in advance.
+  customCA:
+    useCustomCA: false
+    secretName: blast-service-custom-ca
 
 ## Section of the WebCerberus container parameters
 ## 
