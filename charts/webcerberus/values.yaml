@@ -318,6 +318,12 @@ solr:
   ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
   ##
   ## nameOverride: ""
+  ## @param createCore Automatically create the Solr core during deployment
+  ##
+  createCore: true
+  ## @param coreName Name of the Solr core to create
+  ##
+  coreName: persephone
   ## @param replicas Number of Solr pods managed by the Apache Solr Operator chart
   ##
   replicas: 1

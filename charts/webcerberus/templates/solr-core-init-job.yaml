@@ -1,0 +1,48 @@
+{{- if .Values.solr.createCore }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "psnservice.fullname" . }}-solr-core-init
+  labels:
+    {{- include "psnservice.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        {{- include "psnservice.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "psnservice.fullname" . }}
+      restartPolicy: Never
+      containers:
+      - name: solr-core-init
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Wait for Solr to be ready
+          for i in {1..60}; do
+            if curl -f http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores; then
+              echo "Solr is ready"
+              break
+            fi
+            echo "Waiting for Solr... ($i/60)"
+            sleep 5
+          done
+
+          # Check if core already exists
+          CORE_EXISTS=$(curl -s http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores?action=STATUS | grep -c "{{ .Values.solr.coreName }}")
+          
+          if [ "$CORE_EXISTS" -eq 0 ]; then
+            echo "Creating core: {{ .Values.solr.coreName }}"
+            curl -X GET "http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores?action=CREATE&name={{ .Values.solr.coreName }}&instanceDir={{ .Values.solr.coreName }}"
+            echo "Core {{ .Values.solr.coreName }} created"
+          else
+            echo "Core {{ .Values.solr.coreName }} already exists"
+          fi
+{{- end }}
