@@ -4,7 +4,10 @@ kind: Job
 metadata:
   name: {{ include "psnservice.fullname" . }}-solr-core-init
   labels:
-    {{- include "psnservice.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "psnservice.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "5"
@@ -14,9 +17,9 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "psnservice.labels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ include "psnservice.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      serviceAccountName: {{ include "psnservice.fullname" . }}
       restartPolicy: Never
       containers:
       - name: solr-core-init
