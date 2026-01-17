@@ -32,7 +32,7 @@ If release name contains chart name it will be used as a full name.
 Define Solr service name
 */}}
 {{- define "psnservice.solrName" -}}
-{{- default "solr" .Values.solr.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- default "solrcloud-0" .Values.solr.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
