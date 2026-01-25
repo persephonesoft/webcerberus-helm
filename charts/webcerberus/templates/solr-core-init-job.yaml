@@ -26,9 +26,14 @@ spec:
         - /bin/sh
         - -c
         - |
+          # Extract base URL (host:port) from SOLR_URL
+          SOLR_BASE_URL="{{ include "psnservice.solrUrl" . }}"
+          # Remove trailing /solr if present and construct proper API endpoints
+          SOLR_API_BASE="${SOLR_BASE_URL%/solr}"
+          
           # Wait for Solr to be ready
           for i in {1..60}; do
-            if curl -f http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores; then
+            if curl -f ${SOLR_API_BASE}/solr/admin/cores?action=STATUS; then
               echo "Solr is ready"
               break
             fi
@@ -36,13 +41,15 @@ spec:
             sleep 5
           done
 
-          # Check if collection already exists
-          COLLECTION_EXISTS=$(curl -s http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/collections?action=LIST | grep -c "{{ .Values.solr.coreName }}")
+          # Check if collection already exists using v2 API
+          COLLECTION_EXISTS=$(curl -s ${SOLR_API_BASE}/api/collections | grep -c "{{ .Values.solr.coreName }}")
           
           if [ "$COLLECTION_EXISTS" -eq 0 ]; then
             echo "Creating collection: {{ .Values.solr.coreName }}"
-            # Use Collections API (recommended for SolrCloud)
-            curl -X GET "http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/collections?action=CREATE&name={{ .Values.solr.coreName }}&numShards=1&replicationFactor=1&collection.configName=_default"
+            # Use v2 Collections API with POST
+            curl -X POST "${SOLR_API_BASE}/api/collections" \
+              -H "Content-Type: application/json" \
+              -d "{\"create\": {\"name\": \"{{ .Values.solr.coreName }}\", \"numShards\": 1, \"replicationFactor\": 1, \"configName\": \"_default\"}}"
             echo "Collection {{ .Values.solr.coreName }} created"
           else
             echo "Collection {{ .Values.solr.coreName }} already exists"

@@ -334,8 +334,9 @@ solr:
   ## @param image.pullPolicy image pull policy
   ##
   image:
-    repository: solr
-    tag: 8.11.1
+    registry: docker.io
+    repository: bitnamilegacy/solr
+    tag: 8.11.4
     pullPolicy: IfNotPresent
 
   ## @param addressability.podPort Solr HTTP port exposed by the Solr Operator services
