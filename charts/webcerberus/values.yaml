@@ -331,8 +331,8 @@ solr:
   ##
   image:
     registry: docker.io
-    repository: bitnami/solr
-    tag: 8.11.2-debian-11-r37
+    repository: bitnamilegacy/solr
+    tag: 8.11.4
 
   auth:
     ## @param auth.enabled Enable Solr authentication
