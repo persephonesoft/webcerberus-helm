@@ -10,8 +10,6 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 5
   template:
@@ -38,14 +36,15 @@ spec:
             sleep 5
           done
 
-          # Check if core already exists
-          CORE_EXISTS=$(curl -s http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores?action=STATUS | grep -c "{{ .Values.solr.coreName }}")
+          # Check if collection already exists
+          COLLECTION_EXISTS=$(curl -s http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/collections?action=LIST | grep -c "{{ .Values.solr.coreName }}")
           
-          if [ "$CORE_EXISTS" -eq 0 ]; then
-            echo "Creating core: {{ .Values.solr.coreName }}"
-            curl -X GET "http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/cores?action=CREATE&name={{ .Values.solr.coreName }}&instanceDir={{ .Values.solr.coreName }}"
-            echo "Core {{ .Values.solr.coreName }} created"
+          if [ "$COLLECTION_EXISTS" -eq 0 ]; then
+            echo "Creating collection: {{ .Values.solr.coreName }}"
+            # Use Collections API (recommended for SolrCloud)
+            curl -X GET "http://{{ include "psnservice.fullname" . }}-solrcloud-0:{{ .Values.solr.addressability.commonServicePort }}/solr/admin/collections?action=CREATE&name={{ .Values.solr.coreName }}&numShards=1&replicationFactor=1&collection.configName=_default"
+            echo "Collection {{ .Values.solr.coreName }} created"
           else
-            echo "Core {{ .Values.solr.coreName }} already exists"
+            echo "Collection {{ .Values.solr.coreName }} already exists"
           fi
 {{- end }}
