@@ -365,7 +365,7 @@ solr:
   ## Set migration.enabled=true and specify the existing Bitnami PVC name to migrate data
   ##
   migration:
-    enabled: false
+    enabled: true
     ## @param migration.bitnamiPvcName Name of the existing Bitnami Solr PVC to migrate from
     ## The PVC must exist in the same namespace
     bitnamiPvcName: "data-my-release-solr-0"  # Your Bitnami PVC name

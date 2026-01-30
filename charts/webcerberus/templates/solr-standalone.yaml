@@ -69,45 +69,96 @@ spec:
               echo "Source (Bitnami): ${BITNAMI_DATA}"
               echo "Target (Solr): ${SOLR_DATA}"
               
-              # Check if migration is needed
-              if [ -d "${SOLR_DATA}/${CORE_NAME}/data/index" ]; then
-                echo "Data already exists at ${SOLR_DATA}/${CORE_NAME}, skipping migration"
-                exit 0
-              fi
+              # Function to check if a directory contains actual Lucene index data
+              has_index_data() {
+                local dir="$1"
+                # Check for Lucene segment files (segments_* or write.lock with _*.cfs files)
+                if [ -d "$dir" ]; then
+                  if ls "$dir"/segments_* 1>/dev/null 2>&1 || ls "$dir"/_*.cfs 1>/dev/null 2>&1 || ls "$dir"/_*.si 1>/dev/null 2>&1; then
+                    return 0
+                  fi
+                fi
+                return 1
+              }
               
-              # Check if Bitnami data exists
+              # Check Bitnami source for actual index data
+              BITNAMI_INDEX_DIR="${BITNAMI_DATA}/${CORE_NAME}/data/index"
+              TARGET_INDEX_DIR="${SOLR_DATA}/${CORE_NAME}/data/index"
+              
+              echo "Checking Bitnami source: ${BITNAMI_INDEX_DIR}"
               if [ ! -d "${BITNAMI_DATA}" ]; then
-                echo "No Bitnami data found at ${BITNAMI_DATA}, skipping migration"
-                ls -la /bitnami-solr/ || echo "Bitnami mount is empty"
+                echo "No Bitnami data found at ${BITNAMI_DATA}"
+                echo "Contents of /bitnami-solr/:"
+                ls -la /bitnami-solr/ 2>/dev/null || echo "  (empty or not accessible)"
+                echo "Skipping migration - no source data"
                 exit 0
               fi
               
               echo "Contents of Bitnami data directory:"
               ls -la "${BITNAMI_DATA}/" || true
               
-              # Look for core data in Bitnami structure
-              if [ -d "${BITNAMI_DATA}/${CORE_NAME}" ]; then
-                echo "Found core ${CORE_NAME} in Bitnami data"
-                
-                # Create target directory
-                mkdir -p "${SOLR_DATA}/${CORE_NAME}"
-                
-                # Copy the core data (index data, tlog, etc.)
-                echo "Copying core data..."
-                cp -rv "${BITNAMI_DATA}/${CORE_NAME}/data" "${SOLR_DATA}/${CORE_NAME}/" || true
-                
-                echo "Migration completed"
-                ls -la "${SOLR_DATA}/${CORE_NAME}/"
-              else
-                echo "Core ${CORE_NAME} not found in Bitnami data"
-                echo "Available directories in Bitnami data:"
-                ls -la "${BITNAMI_DATA}/" || true
+              if [ ! -d "${BITNAMI_INDEX_DIR}" ]; then
+                echo "No index directory found at ${BITNAMI_INDEX_DIR}"
+                echo "Looking for core ${CORE_NAME} in Bitnami data..."
+                ls -la "${BITNAMI_DATA}/${CORE_NAME}/" 2>/dev/null || echo "  Core directory not found"
+                echo "Skipping migration - no source index"
+                exit 0
               fi
+              
+              echo "Bitnami index directory contents:"
+              ls -la "${BITNAMI_INDEX_DIR}/" || true
+              
+              if ! has_index_data "${BITNAMI_INDEX_DIR}"; then
+                echo "No actual Lucene index data found in Bitnami source"
+                echo "Skipping migration - source is empty"
+                exit 0
+              fi
+              
+              echo "✓ Found Lucene index data in Bitnami source"
+              
+              # Check if target already has real data
+              if has_index_data "${TARGET_INDEX_DIR}"; then
+                echo "Target ${TARGET_INDEX_DIR} already has Lucene index data"
+                echo "Target index contents:"
+                ls -la "${TARGET_INDEX_DIR}/" || true
+                echo "Skipping migration - target already has data"
+                exit 0
+              fi
+              
+              echo "Target has no index data - proceeding with migration"
+              
+              # Remove any empty core structure that might exist
+              if [ -d "${SOLR_DATA}/${CORE_NAME}" ]; then
+                echo "Removing existing empty core structure at ${SOLR_DATA}/${CORE_NAME}"
+                rm -rf "${SOLR_DATA}/${CORE_NAME}"
+              fi
+              
+              # Create target directory
+              mkdir -p "${SOLR_DATA}/${CORE_NAME}"
+              
+              # Copy the entire core data directory (includes index, tlog, snapshot_metadata, etc.)
+              echo "Copying core data from Bitnami..."
+              if [ -d "${BITNAMI_DATA}/${CORE_NAME}/data" ]; then
+                cp -rv "${BITNAMI_DATA}/${CORE_NAME}/data" "${SOLR_DATA}/${CORE_NAME}/"
+              fi
+              
+              # Also copy core.properties if it exists (might need adjustment)
+              if [ -f "${BITNAMI_DATA}/${CORE_NAME}/core.properties" ]; then
+                echo "Copying core.properties..."
+                cp -v "${BITNAMI_DATA}/${CORE_NAME}/core.properties" "${SOLR_DATA}/${CORE_NAME}/"
+              fi
+              
+              echo "Migration completed successfully!"
+              echo "Target core contents:"
+              ls -la "${SOLR_DATA}/${CORE_NAME}/"
+              echo "Target index contents:"
+              ls -la "${SOLR_DATA}/${CORE_NAME}/data/index/" 2>/dev/null || echo "  (no index dir yet)"
               
               # Set permissions
               chown -R 8983:8983 "${SOLR_DATA}"
+              chmod -R 775 "${SOLR_DATA}/${CORE_NAME}"
               
-              echo "Migration init container complete"
+              echo "=== Migration init container complete ==="
           securityContext:
             runAsUser: 0
           volumeMounts:
