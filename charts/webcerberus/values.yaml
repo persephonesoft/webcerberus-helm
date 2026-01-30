@@ -312,9 +312,12 @@ nodeSelector: {}
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##
 
-## @section Solr parameters (standalone mode)
+## @section Solr parameters
 ##
 solr:
+  ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
+  ##
+  nameOverride: "solr"
   ## @param createCore Automatically create the Solr core during deployment
   ##
   createCore: true
