@@ -48,6 +48,51 @@ spec:
       {{- end }}
       securityContext:
         fsGroup: 8983
+        runAsUser: 8983
+        runAsGroup: 8983
+      initContainers:
+        # Init container to set up custom configset before Solr starts
+        - name: init-configset
+          image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
+          imagePullPolicy: {{ .Values.solr.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              CONFIGSET_DIR="/var/solr/data/configsets/{{ .Values.solr.coreName }}"
+              CONF_DIR="${CONFIGSET_DIR}/conf"
+              LANG_DIR="${CONF_DIR}/lang"
+              
+              echo "Creating custom configset directory: ${CONF_DIR}"
+              mkdir -p "${CONF_DIR}"
+              mkdir -p "${LANG_DIR}"
+              
+              echo "Copying configuration files..."
+              # Copy managed-schema (for ManagedIndexSchemaFactory)
+              cp /tmp/solr-config/managed-schema "${CONF_DIR}/managed-schema"
+              cp /tmp/solr-config/solrconfig.xml "${CONF_DIR}/"
+              cp /tmp/solr-config/stopwords.txt "${CONF_DIR}/"
+              cp /tmp/solr-config/synonyms.txt "${CONF_DIR}/"
+              cp /tmp/solr-config/protwords.txt "${CONF_DIR}/"
+              # Copy English stopwords to lang directory (for text_en field type)
+              cp /tmp/solr-config/stopwords_en.txt "${LANG_DIR}/stopwords_en.txt"
+              
+              echo "Setting permissions (writable for schema modifications)..."
+              chown -R 8983:8983 "${CONFIGSET_DIR}"
+              chmod -R 775 "${CONFIGSET_DIR}"
+              chmod 664 "${CONF_DIR}/managed-schema"
+              
+              echo "Configset initialization complete"
+              ls -la "${CONF_DIR}/"
+              ls -la "${LANG_DIR}/"
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: solr-data
+              mountPath: /var/solr/data
+            - name: solr-config
+              mountPath: /tmp/solr-config
       containers:
         - name: solr
           image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
@@ -81,6 +126,13 @@ spec:
           volumeMounts:
             - name: solr-data
               mountPath: /var/solr/data
+            - name: solr-config
+              mountPath: /tmp/solr-config
+              readOnly: true
+      volumes:
+        - name: solr-config
+          configMap:
+            name: {{ include "psnservice.fullname" . }}-solr-config
   volumeClaimTemplates:
     - metadata:
         name: solr-data

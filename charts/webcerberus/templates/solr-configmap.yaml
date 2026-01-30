@@ -1,0 +1,414 @@
+{{- if .Values.solr.createCore }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "psnservice.fullname" . }}-solr-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: solr-config
+data:
+  solrconfig.xml: |
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <config>
+      <luceneMatchVersion>8.11.2</luceneMatchVersion>
+      <dataDir>${solr.data.dir:}</dataDir>
+      <directoryFactory name="DirectoryFactory" 
+                        class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
+      <codecFactory class="solr.SchemaCodecFactory"/>
+      
+      <!-- Use ManagedIndexSchemaFactory to allow dynamic schema modifications via Schema API -->
+      <schemaFactory class="ManagedIndexSchemaFactory">
+        <bool name="mutable">true</bool>
+        <str name="managedSchemaResourceName">managed-schema</str>
+      </schemaFactory>
+      
+      <indexConfig>
+        <lockType>${solr.lock.type:native}</lockType>
+      </indexConfig>
+
+      <updateHandler class="solr.DirectUpdateHandler2">
+        <updateLog>
+          <str name="dir">${solr.ulog.dir:}</str>
+          <int name="numVersionBuckets">${solr.ulog.numVersionBuckets:65536}</int>
+        </updateLog>
+        <autoCommit>
+          <maxTime>${solr.autoCommit.maxTime:15000}</maxTime>
+          <openSearcher>false</openSearcher>
+        </autoCommit>
+        <autoSoftCommit>
+          <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime>
+        </autoSoftCommit>
+      </updateHandler>
+
+      <query>
+        <maxBooleanClauses>${solr.max.booleanClauses:1024}</maxBooleanClauses>
+        <filterCache class="solr.FastLRUCache"
+                     size="512"
+                     initialSize="512"
+                     autowarmCount="0"/>
+        <queryResultCache class="solr.LRUCache"
+                          size="512"
+                          initialSize="512"
+                          autowarmCount="0"/>
+        <documentCache class="solr.LRUCache"
+                       size="512"
+                       initialSize="512"
+                       autowarmCount="0"/>
+        <cache name="perSegFilter"
+               class="solr.search.LRUCache"
+               size="10"
+               initialSize="0"
+               autowarmCount="10"
+               regenerator="solr.NoOpRegenerator"/>
+        <enableLazyFieldLoading>true</enableLazyFieldLoading>
+        <queryResultWindowSize>20</queryResultWindowSize>
+        <queryResultMaxDocsCached>200</queryResultMaxDocsCached>
+        <useColdSearcher>false</useColdSearcher>
+      </query>
+
+      <requestDispatcher>
+        <httpCaching never304="true"/>
+      </requestDispatcher>
+
+      <requestHandler name="/select" class="solr.SearchHandler">
+        <lst name="defaults">
+          <str name="echoParams">explicit</str>
+          <int name="rows">10</int>
+          <str name="df">_text_</str>
+        </lst>
+      </requestHandler>
+
+      <requestHandler name="/query" class="solr.SearchHandler">
+        <lst name="defaults">
+          <str name="echoParams">explicit</str>
+          <str name="wt">json</str>
+          <str name="indent">true</str>
+          <str name="df">_text_</str>
+        </lst>
+      </requestHandler>
+
+      <requestHandler name="/update" class="solr.UpdateRequestHandler"/>
+      <requestHandler name="/update/json" class="solr.UpdateRequestHandler">
+        <lst name="defaults">
+          <str name="stream.contentType">application/json</str>
+        </lst>
+      </requestHandler>
+
+      <!-- Ping handler for health checks -->
+      <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+        <lst name="invariants">
+          <str name="q">*:*</str>
+        </lst>
+        <lst name="defaults">
+          <str name="echoParams">all</str>
+        </lst>
+      </requestHandler>
+    </config>
+
+  managed-schema: |
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <schema name="{{ .Values.solr.coreName }}" version="1.6">
+      <!-- Basic field types -->
+      <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true"/>
+      <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true" docValues="true"/>
+      <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
+      <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
+      
+      <!-- Numeric field types -->
+      <fieldType name="pint" class="solr.IntPointField" docValues="true"/>
+      <fieldType name="pfloat" class="solr.FloatPointField" docValues="true"/>
+      <fieldType name="plong" class="solr.LongPointField" docValues="true"/>
+      <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+      <fieldType name="pints" class="solr.IntPointField" docValues="true" multiValued="true"/>
+      <fieldType name="pfloats" class="solr.FloatPointField" docValues="true" multiValued="true"/>
+      <fieldType name="plongs" class="solr.LongPointField" docValues="true" multiValued="true"/>
+      <fieldType name="pdoubles" class="solr.DoublePointField" docValues="true" multiValued="true"/>
+      <fieldType name="pdate" class="solr.DatePointField" docValues="true"/>
+      <fieldType name="pdates" class="solr.DatePointField" docValues="true" multiValued="true"/>
+      <fieldType name="binary" class="solr.BinaryField"/>
+      <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
+      
+      <!-- Text field types -->
+      <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+        <analyzer type="index">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+          <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- English text field type - required by WebCerberus -->
+      <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
+        <analyzer type="index">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_en.txt"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.EnglishPossessiveFilterFactory"/>
+          <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+          <filter class="solr.PorterStemFilterFactory"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_en.txt"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.EnglishPossessiveFilterFactory"/>
+          <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+          <filter class="solr.PorterStemFilterFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- English text field type for splitting (word delimiter) -->
+      <fieldType name="text_en_splitting" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
+        <analyzer type="index">
+          <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_en.txt"/>
+          <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="1"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+          <filter class="solr.PorterStemFilterFactory"/>
+          <filter class="solr.FlattenGraphFilterFactory"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+          <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_en.txt"/>
+          <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="0" catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+          <filter class="solr.PorterStemFilterFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- Custom field type for names - required by WebCerberus -->
+      <fieldType name="text_names" class="solr.TextField" positionIncrementGap="100">
+        <analyzer type="index">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.ASCIIFoldingFilterFactory"/>
+          <filter class="solr.EdgeNGramFilterFactory" minGramSize="2" maxGramSize="25"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+          <filter class="solr.ASCIIFoldingFilterFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- Whitespace text field -->
+      <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
+        <analyzer>
+          <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- Catch-all text field -->
+      <fieldType name="_text_" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+        <analyzer type="index">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer class="solr.StandardTokenizerFactory"/>
+          <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+          <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+      </fieldType>
+
+      <!-- Required fields -->
+      <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+      <field name="_version_" type="plong" indexed="false" stored="false"/>
+      <field name="_root_" type="string" indexed="true" stored="false" docValues="false"/>
+      <field name="_text_" type="_text_" indexed="true" stored="false" multiValued="true"/>
+      
+      <!-- WebCerberus-specific fields using text_names type -->
+      <field name="names" type="text_names" indexed="true" stored="true" multiValued="true" required="false"/>
+      <field name="qual_values" type="text_names" indexed="true" stored="true" multiValued="true" required="false"/>
+      <field name="qual_name" type="text_names" indexed="true" stored="true" multiValued="false" required="false"/>
+      <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" required="false"/>
+
+      <!-- Dynamic fields -->
+      <dynamicField name="*_i" type="pint" indexed="true" stored="true"/>
+      <dynamicField name="*_is" type="pint" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_s" type="string" indexed="true" stored="true"/>
+      <dynamicField name="*_ss" type="string" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_l" type="plong" indexed="true" stored="true"/>
+      <dynamicField name="*_ls" type="plong" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_t" type="text_general" indexed="true" stored="true"/>
+      <dynamicField name="*_txt" type="text_general" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_b" type="boolean" indexed="true" stored="true"/>
+      <dynamicField name="*_bs" type="boolean" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_f" type="pfloat" indexed="true" stored="true"/>
+      <dynamicField name="*_fs" type="pfloat" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_d" type="pdouble" indexed="true" stored="true"/>
+      <dynamicField name="*_ds" type="pdouble" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="*_dt" type="pdate" indexed="true" stored="true"/>
+      <dynamicField name="*_dts" type="pdate" indexed="true" stored="true" multiValued="true"/>
+      <dynamicField name="ignored_*" type="string" indexed="false" stored="false" multiValued="true"/>
+
+      <uniqueKey>id</uniqueKey>
+
+      <!-- Copy all text to the catch-all field -->
+      <copyField source="*" dest="_text_"/>
+    </schema>
+
+  stopwords.txt: |
+    # Standard English stop words
+    a
+    an
+    and
+    are
+    as
+    at
+    be
+    but
+    by
+    for
+    if
+    in
+    into
+    is
+    it
+    no
+    not
+    of
+    on
+    or
+    such
+    that
+    the
+    their
+    then
+    there
+    these
+    they
+    this
+    to
+    was
+    will
+    with
+
+  synonyms.txt: |
+    # Blank synonyms file - add your synonyms here
+    # format: word1,word2,word3 => normalized
+
+  protwords.txt: |
+    # Protected words - these words will not be stemmed
+    # Add words you want to protect from stemming here
+
+  stopwords_en.txt: |
+    # English stopwords - used by text_en field type
+    a
+    an
+    and
+    are
+    as
+    at
+    be
+    but
+    by
+    for
+    if
+    in
+    into
+    is
+    it
+    no
+    not
+    of
+    on
+    or
+    such
+    that
+    the
+    their
+    then
+    there
+    these
+    they
+    this
+    to
+    was
+    will
+    with
+    have
+    has
+    had
+    do
+    does
+    did
+    been
+    being
+    would
+    could
+    should
+    may
+    might
+    must
+    shall
+    can
+    need
+    dare
+    ought
+    used
+    i
+    me
+    my
+    myself
+    we
+    our
+    ours
+    ourselves
+    you
+    your
+    yours
+    yourself
+    yourselves
+    he
+    him
+    his
+    himself
+    she
+    her
+    hers
+    herself
+    it
+    its
+    itself
+    what
+    which
+    who
+    whom
+    when
+    where
+    why
+    how
+    all
+    each
+    every
+    both
+    few
+    more
+    most
+    other
+    some
+    any
+    only
+    own
+    same
+    so
+    than
+    too
+    very
+    just
+    also
+{{- end }}

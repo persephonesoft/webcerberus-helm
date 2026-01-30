@@ -11,8 +11,10 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   backoffLimit: 5
+  ttlSecondsAfterFinished: 300
   template:
     metadata:
       labels:
@@ -34,9 +36,11 @@ spec:
           # Remove trailing /solr if present and construct proper API endpoints
           SOLR_API_BASE="${SOLR_BASE_URL%/solr}"
           CORE_NAME="{{ .Values.solr.coreName }}"
+          CONFIGSET_NAME="{{ .Values.solr.coreName }}"
           
           echo "Solr API Base: ${SOLR_API_BASE}"
           echo "Core/Collection Name: ${CORE_NAME}"
+          echo "ConfigSet Name: ${CONFIGSET_NAME}"
           
           # Wait for Solr to be ready (up to 5 minutes)
           echo "Waiting for Solr to be ready..."
@@ -64,9 +68,15 @@ spec:
           
           if echo "$STATUS_RESPONSE" | grep -q "instanceDir"; then
             echo "Core ${CORE_NAME} already exists"
+            
+            # Reload core to pick up any config changes
+            echo "Reloading core to apply configuration changes..."
+            RELOAD_RESULT=$(curl -s "${SOLR_API_BASE}/solr/admin/cores?action=RELOAD&core=${CORE_NAME}")
+            echo "Reload response: $RELOAD_RESULT"
           else
-            echo "Creating core: ${CORE_NAME}"
-            RESULT=$(curl -s "${SOLR_API_BASE}/solr/admin/cores?action=CREATE&name=${CORE_NAME}&configSet=/opt/solr/server/solr/configsets/_default")
+            echo "Creating core: ${CORE_NAME} with custom configset"
+            # Use the custom configset that was created by the init container
+            RESULT=$(curl -s "${SOLR_API_BASE}/solr/admin/cores?action=CREATE&name=${CORE_NAME}&configSet=${CONFIGSET_NAME}&instanceDir=${CORE_NAME}")
             echo "Create response: $RESULT"
             if echo "$RESULT" | grep -q '"status":0'; then
               echo "Core ${CORE_NAME} created successfully"
@@ -74,6 +84,16 @@ spec:
               echo "Failed to create core: $RESULT"
               exit 1
             fi
+          fi
+          
+          # Verify core is accessible
+          echo "Verifying core is accessible..."
+          sleep 2
+          PING_RESULT=$(curl -sf "${SOLR_API_BASE}/solr/${CORE_NAME}/admin/ping" || echo "FAILED")
+          if echo "$PING_RESULT" | grep -q '"status":"OK"'; then
+            echo "Core ${CORE_NAME} is healthy and responding"
+          else
+            echo "WARNING: Core ping check returned: $PING_RESULT"
           fi
           
           echo "Solr initialization completed successfully"
