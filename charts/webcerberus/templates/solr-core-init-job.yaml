@@ -56,9 +56,8 @@ spec:
             exit 1
           fi
 
-          {{- if .Values.solr.standalone.enabled }}
           # Standalone mode: Use Core Admin API
-          echo "Running in standalone mode - using Core Admin API"
+          echo "Using Core Admin API"
           
           # Check if core exists by looking for instanceDir in the response
           STATUS_RESPONSE=$(curl -sf "${SOLR_API_BASE}/solr/admin/cores?action=STATUS&core=${CORE_NAME}" || echo "")
@@ -76,27 +75,6 @@ spec:
               exit 1
             fi
           fi
-          {{- else }}
-          # SolrCloud mode: Use Collections API
-          echo "Running in SolrCloud mode - using Collections API"
-          
-          # Check if collection exists
-          LIST_RESPONSE=$(curl -sf "${SOLR_API_BASE}/solr/admin/collections?action=LIST" || echo "")
-          
-          if echo "$LIST_RESPONSE" | grep -q "\"${CORE_NAME}\""; then
-            echo "Collection ${CORE_NAME} already exists"
-          else
-            echo "Creating collection: ${CORE_NAME}"
-            RESULT=$(curl -s "${SOLR_API_BASE}/solr/admin/collections?action=CREATE&name=${CORE_NAME}&numShards=1&replicationFactor=1&collection.configName=_default")
-            echo "Create response: $RESULT"
-            if echo "$RESULT" | grep -q '"status":0'; then
-              echo "Collection ${CORE_NAME} created successfully"
-            else
-              echo "Failed to create collection: $RESULT"
-              exit 1
-            fi
-          fi
-          {{- end }}
           
           echo "Solr initialization completed successfully"
 {{- end }}

@@ -29,14 +29,10 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
-Define Solr service name (standalone or SolrCloud common service)
+Define Solr service name (standalone mode)
 */}}
 {{- define "psnservice.solrName" -}}
-{{- if .Values.solr.standalone.enabled -}}
-{{- printf "%s-solr" (include "psnservice.fullname" .) -}}
-{{- else -}}
-{{- default "solrcloud-common" .Values.solr.nameOverride | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
+{{- printf "solr" -}}
 {{- end -}}
 
 {{/*
@@ -59,15 +55,13 @@ Create chart name and version as used by the chart label.
 
 {{/*
 Create Solr URL string.
-Uses FQDN with namespace for cross-namespace DNS resolution.
+Uses FQDN with namespace for DNS resolution.
 */}}
 {{- define "psnservice.solrUrl" -}}
 {{- if .Values.env.ENVPSN_Solr_URL -}}
 {{- .Values.env.ENVPSN_Solr_URL | lower -}}
-{{- else if .Values.solr.standalone.enabled -}}
-{{- printf "http://%s.%s.svc.cluster.local:%s/solr" (include "psnservice.solrName" .) (include "psnservice.namespace" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- else -}}
-{{- printf "http://%s-%s.%s.svc.cluster.local:%s/solr" .Release.Name (include "psnservice.solrName" .) (include "psnservice.namespace" .) (include "psnservice.solrServiceHttpPort" .) -}}
+{{- printf "http://%s.%s.svc.cluster.local:%s/solr" (include "psnservice.solrName" .) (include "psnservice.namespace" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- end -}}
 {{- end -}}
 

@@ -312,25 +312,16 @@ nodeSelector: {}
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##
 
-## @section Solr parameters
+## @section Solr parameters (standalone mode)
 ##
 solr:
-  ## @param standalone.enabled Enable standalone Solr mode (no ZooKeeper required)
-  ## Set to false to use SolrCloud mode with Solr Operator
-  ##
-  standalone:
-    enabled: true
-  
-  ## The 'nameOverride' value used as suffix for the Solr service name (SolrCloud mode only)
-  ##
-  ## nameOverride: ""
   ## @param createCore Automatically create the Solr core during deployment
   ##
   createCore: true
   ## @param coreName Name of the Solr core to create
   ##
   coreName: persephone
-  ## @param replicas Number of Solr pods (only 1 supported in standalone mode)
+  ## @param replicas Number of Solr pods
   ##
   replicas: 1
 

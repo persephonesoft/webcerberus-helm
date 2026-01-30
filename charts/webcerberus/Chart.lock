@@ -1,9 +1,0 @@
-dependencies:
-- name: solr
-  repository: https://solr.apache.org/charts
-  version: 0.9.1
-- name: solr-operator
-  repository: https://solr.apache.org/charts
-  version: 0.9.1
-digest: sha256:97520da9d3c4cd78b781abd86176b3274aee8775d36244790524013d5b3d1083
-generated: "2026-01-17T22:01:25.2686664+02:00"

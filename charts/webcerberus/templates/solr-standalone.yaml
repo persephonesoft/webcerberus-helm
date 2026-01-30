@@ -1,4 +1,3 @@
-{{- if .Values.solr.standalone.enabled }}
 ---
 apiVersion: v1
 kind: Service
@@ -94,4 +93,3 @@ spec:
         resources:
           requests:
             storage: {{ .Values.solr.dataStorage.capacity }}
-{{- end }}
