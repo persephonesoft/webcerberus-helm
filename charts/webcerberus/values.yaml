@@ -369,6 +369,10 @@ solr:
     ## @param migration.bitnamiPvcName Name of the existing Bitnami Solr PVC to migrate from
     ## The PVC must exist in the same namespace
     bitnamiPvcName: "data-my-release-solr-0"  # Your Bitnami PVC name
+    ## @param migration.debug Enable debug mode - pauses migration to allow exec into container
+    debug: true
+    ## @param migration.debugSleepSeconds How long to sleep in debug mode (default 3600 = 1 hour)
+    debugSleepSeconds: 30
 
   ## @section Solr pod runtime parameters
   ##

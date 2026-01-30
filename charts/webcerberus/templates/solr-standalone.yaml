@@ -69,6 +69,21 @@ spec:
               echo "Source (Bitnami): ${BITNAMI_DATA}"
               echo "Target (Solr): ${SOLR_DATA}"
               
+              {{- if .Values.solr.migration.debug }}
+              # Debug mode - sleep to allow exec into container for troubleshooting
+              echo "DEBUG MODE ENABLED - Sleeping for {{ .Values.solr.migration.debugSleepSeconds | default 3600 }} seconds..."
+              echo "To troubleshoot, exec into the container:"
+              echo "  kubectl exec -it <pod-name> -c migrate-bitnami-data -n <namespace> -- /bin/bash"
+              echo ""
+              echo "Listing mount points for inspection:"
+              echo "=== /bitnami-solr contents ==="
+              ls -laR /bitnami-solr/ 2>/dev/null | head -100 || echo "  (not accessible)"
+              echo ""
+              echo "=== /var/solr/data contents ==="
+              ls -laR /var/solr/data/ 2>/dev/null | head -100 || echo "  (not accessible)"
+              echo ""
+              {{- end }}
+              
               # Function to check if a directory contains actual Lucene index data
               has_index_data() {
                 local dir="$1"
@@ -166,6 +181,7 @@ spec:
               mountPath: /var/solr/data
             - name: bitnami-solr-data
               mountPath: /bitnami-solr
+              readOnly: true
         {{- end }}
         # Init container to set up custom configset before Solr starts
         - name: init-configset
@@ -245,6 +261,11 @@ spec:
             - name: solr-config
               mountPath: /tmp/solr-config
               readOnly: true
+            {{- if .Values.solr.migration.debug }}
+            - name: bitnami-solr-data
+              mountPath: /bitnami-solr
+              readOnly: true
+            {{- end }}
       volumes:
         - name: solr-config
           configMap:
