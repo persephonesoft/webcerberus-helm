@@ -407,3 +407,11 @@ solrOperator:
   metrics:
     enable: true
 
+## @section Apache Solr Operator subchart overrides
+## These values are passed directly to the upstream solr-operator dependency.
+solr-operator:
+  zookeeper-operator:
+    install: true
+    crd:
+      create: true
+
