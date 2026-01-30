@@ -207,7 +207,7 @@ spec:
               value: /etc/ssl/certs/blast-custom-ca.crt
             {{- end }}
           ports:
-            - name: http
+            - name: shell-http
               containerPort: {{ .Values.persephoneshell.deployment.containerPort }}
               protocol: TCP
           {{- if .Values.persephoneshell.resources }}
@@ -237,7 +237,7 @@ spec:
           livenessProbe:
             httpGet:
               path: {{ .Values.persephoneshell.probes.liveness.path }}
-              port: http
+              port: shell-http
             initialDelaySeconds: {{ .Values.persephoneshell.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.persephoneshell.probes.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.persephoneshell.probes.liveness.timeoutSeconds }}
@@ -248,7 +248,7 @@ spec:
           readinessProbe:
             httpGet:
               path: {{.Values.persephoneshell.probes.readiness.path }}
-              port: http
+              port: shell-http
             initialDelaySeconds: {{ .Values.persephoneshell.probes.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.persephoneshell.probes.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.persephoneshell.probes.readiness.timeoutSeconds }}
