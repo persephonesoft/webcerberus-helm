@@ -349,7 +349,7 @@ solr:
   ## @param solrOptions.javaMemory Java heap settings propagated to the Solr pods
   ##
   solrOptions:
-    javaMemory: "-Xms4g -Xmx4g"
+    javaMemory: "-Xms2g -Xmx2g"
 
   ## @section Storage parameters for SolrCloud
   ##
@@ -367,10 +367,10 @@ solr:
     resources:
       limits:
         cpu: 2000m
-        memory: 2048Mi
+        memory: 4Gi
       requests:
         cpu: 1000m
-        memory: 2048Mi
+        memory: 4Gi
 
   ## Retain legacy port hints for helper templates that build service URLs
   service:
