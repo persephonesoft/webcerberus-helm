@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 5
   template:
@@ -31,15 +33,22 @@ spec:
           # Remove trailing /solr if present and construct proper API endpoints
           SOLR_API_BASE="${SOLR_BASE_URL%/solr}"
           
-          # Wait for Solr to be ready
-          for i in {1..60}; do
-            if curl -f ${SOLR_API_BASE}/solr/admin/cores?action=STATUS; then
+          # Wait for Solr to be ready (up to 5 minutes)
+          i=1
+          while [ $i -le 60 ]; do
+            if curl -sf ${SOLR_API_BASE}/solr/admin/cores?action=STATUS >/dev/null 2>&1; then
               echo "Solr is ready"
               break
             fi
             echo "Waiting for Solr... ($i/60)"
             sleep 5
+            i=$((i + 1))
           done
+          
+          if [ $i -gt 60 ]; then
+            echo "ERROR: Solr did not become ready in time"
+            exit 1
+          fi
 
           # Check if collection already exists using v2 API
           COLLECTION_EXISTS=$(curl -s ${SOLR_API_BASE}/api/collections | grep -c "{{ .Values.solr.coreName }}")
