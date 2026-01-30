@@ -307,6 +307,201 @@ By default the `containerSecurityContext` is disabled: `volumePermissions.contai
 
 If the Kubernetes PodSecurityPolicy/PodSecurity Admission denies running containers under the root user the application's persistent volumes should be recreated.
 
+## Migrating from Bitnami Solr to Standalone Solr Service
+
+This chart has migrated from using the Bitnami Solr Helm chart to a standalone Solr service deployment. This section describes the changes and provides instructions for migrating existing data.
+
+### Why the Change?
+
+The standalone Solr service provides:
+- Simplified deployment without ZooKeeper dependency
+- Direct control over Solr configuration and schema
+- Custom configset with WebCerberus-specific field types (`text_names`, `text_en`)
+- Managed schema support for dynamic field modifications
+
+### Key Differences
+
+| Aspect | Bitnami Solr | Standalone Solr |
+|--------|--------------|-----------------|
+| Image | `bitnami/solr` | `library/solr` (official) |
+| Data Path | `/bitnami/solr/data/` | `/var/solr/data/` |
+| PVC Name | `data-<release>-solr-0` | `solr-data-<release>-solr-0` |
+| Schema | Default managed schema | Custom schema with WebCerberus field types |
+| User ID | 1001 | 8983 |
+
+### Data Migration Process
+
+The chart includes a built-in migration feature that copies Solr index data from an existing Bitnami Solr PVC to the new standalone Solr PVC.
+
+#### Prerequisites
+
+- The existing Bitnami Solr PVC must be in the same namespace
+- The PVC must be accessible (not bound to another running pod)
+
+#### Step 1: Identify the Existing Bitnami PVC Name
+
+```console
+kubectl get pvc -n <namespace> | grep solr
+```
+
+Example output:
+```
+data-my-release-solr-0   Bound    pvc-xxxx   20Gi   RWO    standard   30d
+```
+
+The PVC name is `data-my-release-solr-0`.
+
+#### Step 2: Stop the Old Bitnami Solr (if running)
+
+If you have an existing Bitnami Solr deployment, scale it down or delete it (keeping the PVC):
+
+```console
+# Scale down the StatefulSet
+kubectl scale statefulset <old-release>-solr --replicas=0 -n <namespace>
+
+# Or delete it (PVC will be retained by default)
+kubectl delete statefulset <old-release>-solr -n <namespace>
+```
+
+#### Step 3: Deploy with Migration Enabled
+
+Configure the migration in your values file or via command line:
+
+**Using values.yaml:**
+```yaml
+solr:
+  createCore: true
+  coreName: persephone
+  migration:
+    enabled: true
+    bitnamiPvcName: "data-my-release-solr-0"  # Your existing Bitnami PVC name
+    debug: false  # Set to true for troubleshooting
+```
+
+**Using Helm command line:**
+```console
+helm upgrade my-release ./charts/webcerberus -n <namespace> \
+  --set solr.migration.enabled=true \
+  --set solr.migration.bitnamiPvcName=data-my-release-solr-0
+```
+
+#### Step 4: Verify Migration
+
+Check the init container logs to verify the migration completed successfully:
+
+```console
+# Get the pod name
+kubectl get pods -n <namespace> | grep solr
+
+# Check the migration container logs
+kubectl logs <pod-name> -c migrate-bitnami-data -n <namespace>
+```
+
+Successful migration output:
+```
+=== Bitnami Solr Data Migration ===
+Source (Bitnami): /bitnami-solr/data
+Target (Solr): /var/solr/data
+✓ Found Lucene index data in Bitnami source
+Target has no index data - proceeding with migration
+Copying core data from Bitnami...
+Migration completed successfully!
+```
+
+#### Step 5: Disable Migration After Success
+
+Once migration is complete, disable the migration feature to prevent the Bitnami PVC from being mounted on subsequent deployments:
+
+```yaml
+solr:
+  migration:
+    enabled: false
+```
+
+#### Troubleshooting Migration
+
+**Enable Debug Mode:**
+
+If migration is not working as expected, enable debug mode to pause the container and allow manual inspection:
+
+```yaml
+solr:
+  migration:
+    enabled: true
+    bitnamiPvcName: "data-my-release-solr-0"
+    debug: true
+    debugSleepSeconds: 3600  # Sleep for 1 hour
+```
+
+**Exec into the Container:**
+```console
+kubectl exec -it <pod-name> -c migrate-bitnami-data -n <namespace> -- /bin/bash
+
+# Inside the container, inspect the mount points:
+ls -la /bitnami-solr/
+ls -la /bitnami-solr/data/
+ls -la /bitnami-solr/data/persephone/
+ls -la /var/solr/data/
+```
+
+**Common Issues:**
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| "No Bitnami data found" | PVC not mounted or wrong PVC name | Verify PVC name and that it exists |
+| "No index directory found" | Core name mismatch | Check `solr.coreName` matches the old core name |
+| Migration skipped | Target already has data | Delete the new Solr PVC and redeploy |
+| "Source is empty" | Bitnami PVC has no actual index data | No migration needed |
+
+**Clean Restart (if needed):**
+
+If you need to restart the migration from scratch:
+
+```console
+# Delete the new Solr resources
+kubectl delete job <release>-solr-core-init -n <namespace>
+kubectl delete statefulset <release>-solr -n <namespace>
+kubectl delete pvc solr-data-<release>-solr-0 -n <namespace>
+
+# Redeploy with migration enabled
+helm upgrade <release> ./charts/webcerberus -n <namespace> \
+  --set solr.migration.enabled=true \
+  --set solr.migration.bitnamiPvcName=data-<old-release>-solr-0
+```
+
+### Solr Configuration Details
+
+The standalone Solr deployment includes:
+
+- **Custom ConfigMap** (`<release>-solr-config`) containing:
+  - `solrconfig.xml` - Solr configuration with ManagedIndexSchemaFactory
+  - `managed-schema` - Schema with WebCerberus-specific field types
+  - `stopwords.txt`, `synonyms.txt`, `protwords.txt` - Text analysis files
+  - `stopwords_en.txt` - English stopwords for `text_en` field type
+
+- **Custom Field Types**:
+  - `text_names` - For name fields with edge n-gram tokenization
+  - `text_en` - English text with stemming
+  - `text_en_splitting` - English text with word delimiter support
+  - Standard Solr field types (`string`, `text_general`, etc.)
+
+- **Pre-defined Fields**:
+  - `names`, `qual_values`, `qual_name` - Using `text_names` type
+  - `description` - Using `text_en` type
+
+### Post-Migration Cleanup
+
+After verifying the migration is successful and the application is working correctly:
+
+1. **Delete the old Bitnami Solr PVC** (optional, to free storage):
+   ```console
+   kubectl delete pvc data-<old-release>-solr-0 -n <namespace>
+   ```
+
+2. **Remove migration configuration** from your values file
+
+3. **Update any CI/CD pipelines** to use the new Solr configuration
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` statefulset:
