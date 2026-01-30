@@ -361,6 +361,15 @@ solr:
       pvc:
         storageClassName: ""
 
+  ## @section Migration from Bitnami Solr
+  ## Set migration.enabled=true and specify the existing Bitnami PVC name to migrate data
+  ##
+  migration:
+    enabled: false
+    ## @param migration.bitnamiPvcName Name of the existing Bitnami Solr PVC to migrate from
+    ## The PVC must exist in the same namespace
+    bitnamiPvcName: "data-my-release-solr-0"  # Your Bitnami PVC name
+
   ## @section Solr pod runtime parameters
   ##
   podOptions:

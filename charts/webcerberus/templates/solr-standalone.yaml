@@ -51,6 +51,71 @@ spec:
         runAsUser: 8983
         runAsGroup: 8983
       initContainers:
+        {{- if and .Values.solr.migration.enabled .Values.solr.migration.bitnamiPvcName }}
+        # Migration init container - copies data from Bitnami Solr PVC
+        - name: migrate-bitnami-data
+          image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
+          imagePullPolicy: {{ .Values.solr.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              BITNAMI_DATA="/bitnami-solr/data"
+              SOLR_DATA="/var/solr/data"
+              CORE_NAME="{{ .Values.solr.coreName }}"
+              
+              echo "=== Bitnami Solr Data Migration ==="
+              echo "Source (Bitnami): ${BITNAMI_DATA}"
+              echo "Target (Solr): ${SOLR_DATA}"
+              
+              # Check if migration is needed
+              if [ -d "${SOLR_DATA}/${CORE_NAME}/data/index" ]; then
+                echo "Data already exists at ${SOLR_DATA}/${CORE_NAME}, skipping migration"
+                exit 0
+              fi
+              
+              # Check if Bitnami data exists
+              if [ ! -d "${BITNAMI_DATA}" ]; then
+                echo "No Bitnami data found at ${BITNAMI_DATA}, skipping migration"
+                ls -la /bitnami-solr/ || echo "Bitnami mount is empty"
+                exit 0
+              fi
+              
+              echo "Contents of Bitnami data directory:"
+              ls -la "${BITNAMI_DATA}/" || true
+              
+              # Look for core data in Bitnami structure
+              if [ -d "${BITNAMI_DATA}/${CORE_NAME}" ]; then
+                echo "Found core ${CORE_NAME} in Bitnami data"
+                
+                # Create target directory
+                mkdir -p "${SOLR_DATA}/${CORE_NAME}"
+                
+                # Copy the core data (index data, tlog, etc.)
+                echo "Copying core data..."
+                cp -rv "${BITNAMI_DATA}/${CORE_NAME}/data" "${SOLR_DATA}/${CORE_NAME}/" || true
+                
+                echo "Migration completed"
+                ls -la "${SOLR_DATA}/${CORE_NAME}/"
+              else
+                echo "Core ${CORE_NAME} not found in Bitnami data"
+                echo "Available directories in Bitnami data:"
+                ls -la "${BITNAMI_DATA}/" || true
+              fi
+              
+              # Set permissions
+              chown -R 8983:8983 "${SOLR_DATA}"
+              
+              echo "Migration init container complete"
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: solr-data
+              mountPath: /var/solr/data
+            - name: bitnami-solr-data
+              mountPath: /bitnami-solr
+        {{- end }}
         # Init container to set up custom configset before Solr starts
         - name: init-configset
           image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
@@ -133,6 +198,11 @@ spec:
         - name: solr-config
           configMap:
             name: {{ include "psnservice.fullname" . }}-solr-config
+        {{- if and .Values.solr.migration.enabled .Values.solr.migration.bitnamiPvcName }}
+        - name: bitnami-solr-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.solr.migration.bitnamiPvcName }}
+        {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: solr-data
