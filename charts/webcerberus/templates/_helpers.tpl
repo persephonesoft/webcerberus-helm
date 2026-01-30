@@ -67,7 +67,7 @@ Create Solr URL string.
 {{- if .Values.env.ENVPSN_Solr_URL -}}
 {{- .Values.env.ENVPSN_Solr_URL | lower -}}
 {{- else -}}
-{{- printf "http://%s-%s:%s/solr" (include "psnservice.solrName" .) (include "psnservice.solrServiceHttpPort" .) -}}
+{{- printf "http://%s:%s/solr" (include "psnservice.solrServiceName" .) (include "psnservice.solrServiceHttpPort" .) -}}
 {{- end -}}
 {{- end -}}
 
