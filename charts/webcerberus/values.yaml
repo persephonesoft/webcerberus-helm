@@ -335,9 +335,9 @@ solr:
   ##
   image:
     registry: docker.io
-    repository: bitnamilegacy/solr
+    repository: library/solr
     tag: 8.11.4
-    pullPolicy: IfNotPresent
+  ##  pullPolicy: IfNotPresent
 
   ## @param addressability.podPort Solr HTTP port exposed by the Solr Operator services
   ## @param addressability.commonServicePort Shared Solr service port, kept aligned with helper templates
