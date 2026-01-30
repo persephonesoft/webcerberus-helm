@@ -54,6 +54,13 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Create Solr Service name.
+*/}}
+{{- define "psnservice.solrServiceName" -}}
+{{- printf "%s-%s" .Release.Name (include "psnservice.solrName" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Create Solr URL string.
 */}}
 {{- define "psnservice.solrUrl" -}}
