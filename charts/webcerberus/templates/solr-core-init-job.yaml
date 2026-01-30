@@ -49,22 +49,39 @@ spec:
             exit 1
           fi
 
-          COLLECTION_NAME="{{ .Values.solr.coreName }}"
+          CORE_NAME="{{ .Values.solr.coreName }}"
           
-          # Check if collection already exists using v1 API
-          COLLECTION_EXISTS=$(curl -sf "${SOLR_API_BASE}/solr/admin/collections?action=LIST" | grep -c "\"${COLLECTION_NAME}\"" || echo "0")
+          {{- if .Values.solr.standalone.enabled }}
+          # Standalone mode: Use Core Admin API
+          CORE_EXISTS=$(curl -sf "${SOLR_API_BASE}/solr/admin/cores?action=STATUS&core=${CORE_NAME}" | grep -c "\"${CORE_NAME}\"" || echo "0")
+          
+          if [ "$CORE_EXISTS" -eq 0 ]; then
+            echo "Creating core: ${CORE_NAME}"
+            RESULT=$(curl -sf "${SOLR_API_BASE}/solr/admin/cores?action=CREATE&name=${CORE_NAME}&configSet=_default")
+            if echo "$RESULT" | grep -q '"status":0'; then
+              echo "Core ${CORE_NAME} created successfully"
+            else
+              echo "Failed to create core: $RESULT"
+              exit 1
+            fi
+          else
+            echo "Core ${CORE_NAME} already exists"
+          fi
+          {{- else }}
+          # SolrCloud mode: Use Collections API
+          COLLECTION_EXISTS=$(curl -sf "${SOLR_API_BASE}/solr/admin/collections?action=LIST" | grep -c "\"${CORE_NAME}\"" || echo "0")
           
           if [ "$COLLECTION_EXISTS" -eq 0 ]; then
-            echo "Creating collection: ${COLLECTION_NAME}"
-            # Use v1 Collections API (more reliable for Solr 8.x)
-            RESULT=$(curl -sf "${SOLR_API_BASE}/solr/admin/collections?action=CREATE&name=${COLLECTION_NAME}&numShards=1&replicationFactor=1&collection.configName=_default")
+            echo "Creating collection: ${CORE_NAME}"
+            RESULT=$(curl -sf "${SOLR_API_BASE}/solr/admin/collections?action=CREATE&name=${CORE_NAME}&numShards=1&replicationFactor=1&collection.configName=_default")
             if echo "$RESULT" | grep -q '"status":0'; then
-              echo "Collection ${COLLECTION_NAME} created successfully"
+              echo "Collection ${CORE_NAME} created successfully"
             else
               echo "Failed to create collection: $RESULT"
               exit 1
             fi
           else
-            echo "Collection ${COLLECTION_NAME} already exists"
+            echo "Collection ${CORE_NAME} already exists"
           fi
+          {{- end }}
 {{- end }}

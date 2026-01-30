@@ -4,12 +4,4 @@ description: A Helm chart for Kubernetes
 name: webcerberus
 version: 10.5.9447
 
-
-dependencies:
-  - name: solr
-    version: 0.9.1
-    repository: https://solr.apache.org/charts
-  - name: solr-operator
-    version: 0.9.1
-    repository: https://solr.apache.org/charts
-    condition: solrOperator.install
+## No external dependencies - Solr runs in standalone mode as a StatefulSet

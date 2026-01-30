@@ -1,0 +1,97 @@
+{{- if .Values.solr.standalone.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "psnservice.fullname" . }}-solr
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: solr
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.solr.service.ports.http }}
+      targetPort: solr
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "psnservice.fullname" . }}-solr
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: solr
+spec:
+  serviceName: {{ include "psnservice.fullname" . }}-solr
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "psnservice.name" . }}-solr
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: solr
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 8983
+      containers:
+        - name: solr
+          image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
+          imagePullPolicy: {{ .Values.solr.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: solr
+              containerPort: 8983
+              protocol: TCP
+          env:
+            - name: SOLR_JAVA_MEM
+              value: {{ .Values.solr.solrOptions.javaMemory | quote }}
+          livenessProbe:
+            httpGet:
+              path: /solr/admin/info/system
+              port: solr
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /solr/admin/info/system
+              port: solr
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- if .Values.solr.podOptions.resources }}
+          resources: {{- toYaml .Values.solr.podOptions.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: solr-data
+              mountPath: /var/solr/data
+  volumeClaimTemplates:
+    - metadata:
+        name: solr-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.solr.dataStorage.persistent.pvc.storageClassName }}
+        storageClassName: {{ .Values.solr.dataStorage.persistent.pvc.storageClassName | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.solr.dataStorage.capacity }}
+{{- end }}

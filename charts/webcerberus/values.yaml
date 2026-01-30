@@ -315,7 +315,13 @@ nodeSelector: {}
 ## @section Solr parameters
 ##
 solr:
-  ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
+  ## @param standalone.enabled Enable standalone Solr mode (no ZooKeeper required)
+  ## Set to false to use SolrCloud mode with Solr Operator
+  ##
+  standalone:
+    enabled: true
+  
+  ## The 'nameOverride' value used as suffix for the Solr service name (SolrCloud mode only)
   ##
   ## nameOverride: ""
   ## @param createCore Automatically create the Solr core during deployment
@@ -324,11 +330,11 @@ solr:
   ## @param coreName Name of the Solr core to create
   ##
   coreName: persephone
-  ## @param replicas Number of Solr pods managed by the Apache Solr Operator chart
+  ## @param replicas Number of Solr pods (only 1 supported in standalone mode)
   ##
   replicas: 1
 
-  ## Apache Solr container image (managed by https://solr.apache.org/operator/resources.html#tutorials)
+  ## Apache Solr container image
   ## @param image.repository Solr image repository
   ## @param image.tag Solr image tag
   ## @param image.pullPolicy image pull policy
@@ -337,7 +343,7 @@ solr:
     registry: docker.io
     repository: library/solr
     tag: 8.11.4
-  ##  pullPolicy: IfNotPresent
+    pullPolicy: IfNotPresent
 
   ## @param addressability.podPort Solr HTTP port exposed by the Solr Operator services
   ## @param addressability.commonServicePort Shared Solr service port, kept aligned with helper templates
@@ -372,46 +378,7 @@ solr:
         cpu: 1000m
         memory: 2048Mi
 
-  ## @section ZooKeeper configuration handled by the Solr Operator
-  ##
-  zk:
-    provided:
-      replicas: 1
-
   ## Retain legacy port hints for helper templates that build service URLs
   service:
     ports:
       http: 8983
-
-## @section Solr Operator parameters
-## The Apache Solr Operator manages the Solr CRDs and SolrCloud lifecycle. It must be installed before the Solr subchart applies its custom resources.
-solrOperator:
-  ## @param solrOperator.install Controls whether the Solr Operator dependency is deployed with this release
-  install: true
-
-  ## Scope of namespaces that the operator should watch. Empty string means cluster-wide, matching the upstream defaults.
-  watchNamespaces: ""
-
-  ## Apache Solr Operator container image, aligned with version 0.9.1 from https://solr.apache.org/operator/resources.html#tutorials
-  image:
-    repository: apache/solr-operator
-    tag: v0.9.1
-    pullPolicy: IfNotPresent
-
-  ## Include the Apache ZooKeeper Operator dependency so that SolrCloud can provision its own ZooKeeper clusters.
-  'zookeeper-operator':
-    install: true
-    crd:
-      create: true
-
-  metrics:
-    enable: true
-
-## @section Apache Solr Operator subchart overrides
-## These values are passed directly to the upstream solr-operator dependency.
-solr-operator:
-  zookeeper-operator:
-    install: true
-    crd:
-      create: true
-
