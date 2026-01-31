@@ -53,6 +53,7 @@ spec:
       initContainers:
         {{- if and .Values.solr.migration.enabled .Values.solr.migration.bitnamiPvcName }}
         # Migration init container - copies data from Bitnami Solr PVC
+        # Handles: main core (persephone), user cores (uXXXXXX), and configsets
         - name: migrate-bitnami-data
           image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
           imagePullPolicy: {{ .Values.solr.image.pullPolicy | default "IfNotPresent" }}
@@ -61,118 +62,259 @@ spec:
             - -c
             - |
               set -e
-              BITNAMI_DATA="/bitnami-solr/data"
+              # Bitnami Solr stores data at /bitnami-solr/server/solr/ (not /bitnami-solr/data/)
+              BITNAMI_SOLR_HOME="/bitnami-solr/server/solr"
               SOLR_DATA="/var/solr/data"
               CORE_NAME="{{ .Values.solr.coreName }}"
               
-              echo "=== Bitnami Solr Data Migration ==="
-              echo "Source (Bitnami): ${BITNAMI_DATA}"
-              echo "Target (Solr): ${SOLR_DATA}"
+              echo "=== Bitnami Solr Full Data Migration ==="
+              echo "Source (Bitnami): ${BITNAMI_SOLR_HOME}"
+              echo "Target (Community Solr): ${SOLR_DATA}"
+              echo "Main core: ${CORE_NAME}"
               
               {{- if .Values.solr.migration.debug }}
-              # Debug mode - sleep to allow exec into container for troubleshooting
-              echo "DEBUG MODE ENABLED - Sleeping for {{ .Values.solr.migration.debugSleepSeconds | default 3600 }} seconds..."
+              # Debug mode - list contents for troubleshooting
+              echo ""
+              echo "DEBUG MODE ENABLED"
               echo "To troubleshoot, exec into the container:"
               echo "  kubectl exec -it <pod-name> -c migrate-bitnami-data -n <namespace> -- /bin/bash"
               echo ""
-              echo "Listing mount points for inspection:"
-              echo "=== /bitnami-solr contents ==="
-              ls -laR /bitnami-solr/ 2>/dev/null | head -100 || echo "  (not accessible)"
+              echo "=== /bitnami-solr structure ==="
+              find /bitnami-solr -maxdepth 4 -type d 2>/dev/null || echo "  (not accessible)"
+              echo ""
+              echo "=== All cores in Bitnami ==="
+              ls -la "${BITNAMI_SOLR_HOME}/" 2>/dev/null || echo "  (not accessible)"
+              echo ""
+              echo "=== Bitnami configsets ==="
+              ls -laR "${BITNAMI_SOLR_HOME}/configsets/" 2>/dev/null | head -50 || echo "  (not found)"
               echo ""
               echo "=== /var/solr/data contents ==="
-              ls -laR /var/solr/data/ 2>/dev/null | head -100 || echo "  (not accessible)"
+              ls -laR /var/solr/data/ 2>/dev/null | head -50 || echo "  (not accessible)"
               echo ""
+              sleep {{ .Values.solr.migration.debugSleepSeconds | default 3600 }}
               {{- end }}
               
               # Function to check if a directory contains actual Lucene index data
               has_index_data() {
                 local dir="$1"
-                # Check for Lucene segment files (segments_* or write.lock with _*.cfs files)
                 if [ -d "$dir" ]; then
-                  if ls "$dir"/segments_* 1>/dev/null 2>&1 || ls "$dir"/_*.cfs 1>/dev/null 2>&1 || ls "$dir"/_*.si 1>/dev/null 2>&1; then
+                  if ls "$dir"/segments_* 1>/dev/null 2>&1 || ls "$dir"/_*.si 1>/dev/null 2>&1; then
                     return 0
                   fi
                 fi
                 return 1
               }
               
-              # Check Bitnami source for actual index data
-              BITNAMI_INDEX_DIR="${BITNAMI_DATA}/${CORE_NAME}/data/index"
-              TARGET_INDEX_DIR="${SOLR_DATA}/${CORE_NAME}/data/index"
+              # Function to migrate a single core
+              # Handles both conf/ subdirectory and flat config files in core root
+              migrate_core() {
+                local src_core_dir="$1"
+                local core_name="$2"
+                local target_core_dir="${SOLR_DATA}/${core_name}"
+                local src_index_dir="${src_core_dir}/data/index"
+                local target_index_dir="${target_core_dir}/data/index"
+                
+                echo ""
+                echo "--- Migrating core: ${core_name} ---"
+                
+                # Check if source has index data
+                if [ ! -d "${src_index_dir}" ]; then
+                  echo "  No index directory - skipping"
+                  return 0
+                fi
+                
+                if ! has_index_data "${src_index_dir}"; then
+                  echo "  No Lucene index data - skipping"
+                  return 0
+                fi
+                
+                # Check if target already has data
+                if has_index_data "${target_index_dir}"; then
+                  echo "  Target already has data - skipping"
+                  return 0
+                fi
+                
+                echo "  ✓ Source has index data, target is empty - migrating"
+                
+                # Remove any empty structure
+                if [ -d "${target_core_dir}" ]; then
+                  rm -rf "${target_core_dir}"
+                fi
+                
+                # Create target directory structure
+                mkdir -p "${target_core_dir}/data"
+                
+                # Copy data directories
+                if [ -d "${src_core_dir}/data/index" ]; then
+                  echo "    Copying index..."
+                  cp -r "${src_core_dir}/data/index" "${target_core_dir}/data/"
+                fi
+                if [ -d "${src_core_dir}/data/tlog" ]; then
+                  echo "    Copying tlog..."
+                  cp -r "${src_core_dir}/data/tlog" "${target_core_dir}/data/"
+                fi
+                if [ -d "${src_core_dir}/data/snapshot_metadata" ]; then
+                  echo "    Copying snapshot_metadata..."
+                  cp -r "${src_core_dir}/data/snapshot_metadata" "${target_core_dir}/data/"
+                fi
+                
+                # Handle configuration - two patterns exist in Bitnami:
+                # Pattern 1: conf/ subdirectory (traditional)
+                # Pattern 2: flat config files in core root (user cores)
+                
+                if [ -d "${src_core_dir}/conf" ]; then
+                  # Pattern 1: conf/ subdirectory - copy to configset
+                  echo "    Found conf/ directory - copying to configset"
+                  local configset_dir="${SOLR_DATA}/configsets/${core_name}/conf"
+                  mkdir -p "${configset_dir}"
+                  cp -r "${src_core_dir}/conf/"* "${configset_dir}/" 2>/dev/null || true
+                  chown -R 8983:8983 "${SOLR_DATA}/configsets/${core_name}"
+                  chmod -R 775 "${SOLR_DATA}/configsets/${core_name}"
+                  
+                  # Create core.properties pointing to configset
+                  cat > "${target_core_dir}/core.properties" << COREPROPS
+              name=${core_name}
+              configSet=${core_name}
+              dataDir=data
+              COREPROPS
+                  
+                elif [ -f "${src_core_dir}/managed-schema" ] || [ -f "${src_core_dir}/solrconfig.xml" ]; then
+                  # Pattern 2: flat config files in core root (user cores)
+                  # Copy config files directly into the core directory
+                  echo "    Found flat config files - copying to core directory"
+                  
+                  # Copy each config file if it exists
+                  for config_file in managed-schema solrconfig.xml synonyms.txt stopwords.txt protwords.txt stopwords_en.txt; do
+                    if [ -f "${src_core_dir}/${config_file}" ]; then
+                      echo "      Copying ${config_file}"
+                      cp "${src_core_dir}/${config_file}" "${target_core_dir}/"
+                    fi
+                  done
+                  
+                  # Copy lang/ directory if present
+                  if [ -d "${src_core_dir}/lang" ]; then
+                    echo "      Copying lang/ directory"
+                    cp -r "${src_core_dir}/lang" "${target_core_dir}/"
+                  fi
+                  
+                  # Create core.properties WITHOUT configSet (uses local config)
+                  cat > "${target_core_dir}/core.properties" << COREPROPS
+              name=${core_name}
+              dataDir=data
+              COREPROPS
+                  
+                else
+                  # No local config - use the main configset
+                  echo "    No local config - using ${CORE_NAME} configset"
+                  cat > "${target_core_dir}/core.properties" << COREPROPS
+              name=${core_name}
+              configSet=${CORE_NAME}
+              dataDir=data
+              COREPROPS
+                fi
+                
+                # Remove leading whitespace from core.properties
+                sed -i 's/^[[:space:]]*//' "${target_core_dir}/core.properties"
+                
+                # Set permissions
+                chown -R 8983:8983 "${target_core_dir}"
+                chmod -R 775 "${target_core_dir}"
+                
+                echo "    ✓ Core ${core_name} migrated successfully"
+                return 0
+              }
               
-              echo "Checking Bitnami source: ${BITNAMI_INDEX_DIR}"
-              if [ ! -d "${BITNAMI_DATA}" ]; then
-                echo "No Bitnami data found at ${BITNAMI_DATA}"
+              # Verify Bitnami mount is accessible
+              if [ ! -d "${BITNAMI_SOLR_HOME}" ]; then
+                echo "ERROR: Bitnami Solr home not found at ${BITNAMI_SOLR_HOME}"
                 echo "Contents of /bitnami-solr/:"
-                ls -la /bitnami-solr/ 2>/dev/null || echo "  (empty or not accessible)"
-                echo "Skipping migration - no source data"
+                ls -la /bitnami-solr/ 2>/dev/null || echo "  (not accessible)"
+                echo "Skipping migration - source not accessible"
                 exit 0
               fi
               
-              echo "Contents of Bitnami data directory:"
-              ls -la "${BITNAMI_DATA}/" || true
-              
-              if [ ! -d "${BITNAMI_INDEX_DIR}" ]; then
-                echo "No index directory found at ${BITNAMI_INDEX_DIR}"
-                echo "Looking for core ${CORE_NAME} in Bitnami data..."
-                ls -la "${BITNAMI_DATA}/${CORE_NAME}/" 2>/dev/null || echo "  Core directory not found"
-                echo "Skipping migration - no source index"
+              # Check if migration marker exists (already migrated)
+              if [ -f "${SOLR_DATA}/.migration_complete" ]; then
+                echo "Migration marker found - migration already completed"
+                cat "${SOLR_DATA}/.migration_complete"
+                echo "Skipping migration"
                 exit 0
               fi
               
-              echo "Bitnami index directory contents:"
-              ls -la "${BITNAMI_INDEX_DIR}/" || true
-              
-              if ! has_index_data "${BITNAMI_INDEX_DIR}"; then
-                echo "No actual Lucene index data found in Bitnami source"
-                echo "Skipping migration - source is empty"
-                exit 0
+              echo ""
+              echo "=== Step 1: Migrate configsets ==="
+              if [ -d "${BITNAMI_SOLR_HOME}/configsets" ]; then
+                echo "Found Bitnami configsets directory"
+                mkdir -p "${SOLR_DATA}/configsets"
+                
+                # Copy all configsets except _default (we'll use our own)
+                for configset_dir in "${BITNAMI_SOLR_HOME}/configsets/"*/; do
+                  configset_name=$(basename "${configset_dir}")
+                  if [ "${configset_name}" != "_default" ] && [ -d "${configset_dir}conf" ]; then
+                    echo "  Copying configset: ${configset_name}"
+                    mkdir -p "${SOLR_DATA}/configsets/${configset_name}"
+                    cp -r "${configset_dir}"* "${SOLR_DATA}/configsets/${configset_name}/" 2>/dev/null || true
+                    chown -R 8983:8983 "${SOLR_DATA}/configsets/${configset_name}"
+                    chmod -R 775 "${SOLR_DATA}/configsets/${configset_name}"
+                  fi
+                done
+              else
+                echo "No configsets directory found in Bitnami"
               fi
               
-              echo "✓ Found Lucene index data in Bitnami source"
-              
-              # Check if target already has real data
-              if has_index_data "${TARGET_INDEX_DIR}"; then
-                echo "Target ${TARGET_INDEX_DIR} already has Lucene index data"
-                echo "Target index contents:"
-                ls -la "${TARGET_INDEX_DIR}/" || true
-                echo "Skipping migration - target already has data"
-                exit 0
+              echo ""
+              echo "=== Step 2: Migrate main core (${CORE_NAME}) ==="
+              if [ -d "${BITNAMI_SOLR_HOME}/${CORE_NAME}" ]; then
+                migrate_core "${BITNAMI_SOLR_HOME}/${CORE_NAME}" "${CORE_NAME}"
+              else
+                echo "Main core ${CORE_NAME} not found as direct core"
+                echo "It may be using configset - checking configsets/${CORE_NAME}"
               fi
               
-              echo "Target has no index data - proceeding with migration"
+              echo ""
+              echo "=== Step 3: Migrate user cores (uXXXXXX pattern) ==="
+              USER_CORE_COUNT=0
+              for core_dir in "${BITNAMI_SOLR_HOME}"/u[0-9]*/; do
+                if [ -d "${core_dir}" ]; then
+                  core_name=$(basename "${core_dir}")
+                  if [ -f "${core_dir}/core.properties" ]; then
+                    migrate_core "${core_dir}" "${core_name}"
+                    USER_CORE_COUNT=$((USER_CORE_COUNT + 1))
+                  fi
+                fi
+              done
+              echo "Processed ${USER_CORE_COUNT} user cores"
               
-              # Remove any empty core structure that might exist
-              if [ -d "${SOLR_DATA}/${CORE_NAME}" ]; then
-                echo "Removing existing empty core structure at ${SOLR_DATA}/${CORE_NAME}"
-                rm -rf "${SOLR_DATA}/${CORE_NAME}"
-              fi
+              echo ""
+              echo "=== Step 4: Migrate other named cores ==="
+              # Migrate any other cores that are not: configsets, _default, userfiles, filestore, or the main core
+              for core_dir in "${BITNAMI_SOLR_HOME}"/*/; do
+                core_name=$(basename "${core_dir}")
+                # Skip known non-core directories and already processed items
+                case "${core_name}" in
+                  configsets|_default|userfiles|filestore|"${CORE_NAME}"|u[0-9]*)
+                    continue
+                    ;;
+                esac
+                if [ -f "${core_dir}/core.properties" ]; then
+                  migrate_core "${core_dir}" "${core_name}"
+                fi
+              done
               
-              # Create target directory
-              mkdir -p "${SOLR_DATA}/${CORE_NAME}"
+              # Create migration marker
+              echo "migration_complete=true" > "${SOLR_DATA}/.migration_complete"
+              echo "migration_date=$(date -Iseconds)" >> "${SOLR_DATA}/.migration_complete"
+              echo "source=${BITNAMI_SOLR_HOME}" >> "${SOLR_DATA}/.migration_complete"
+              chown 8983:8983 "${SOLR_DATA}/.migration_complete"
               
-              # Copy the entire core data directory (includes index, tlog, snapshot_metadata, etc.)
-              echo "Copying core data from Bitnami..."
-              if [ -d "${BITNAMI_DATA}/${CORE_NAME}/data" ]; then
-                cp -rv "${BITNAMI_DATA}/${CORE_NAME}/data" "${SOLR_DATA}/${CORE_NAME}/"
-              fi
-              
-              # Also copy core.properties if it exists (might need adjustment)
-              if [ -f "${BITNAMI_DATA}/${CORE_NAME}/core.properties" ]; then
-                echo "Copying core.properties..."
-                cp -v "${BITNAMI_DATA}/${CORE_NAME}/core.properties" "${SOLR_DATA}/${CORE_NAME}/"
-              fi
-              
-              echo "Migration completed successfully!"
-              echo "Target core contents:"
-              ls -la "${SOLR_DATA}/${CORE_NAME}/"
-              echo "Target index contents:"
-              ls -la "${SOLR_DATA}/${CORE_NAME}/data/index/" 2>/dev/null || echo "  (no index dir yet)"
-              
-              # Set permissions
-              chown -R 8983:8983 "${SOLR_DATA}"
-              chmod -R 775 "${SOLR_DATA}/${CORE_NAME}"
-              
+              echo ""
+              echo "=== Migration Summary ==="
+              echo "Cores migrated:"
+              ls -la "${SOLR_DATA}/" | grep "^d" | grep -v configsets || true
+              echo ""
+              echo "Configsets available:"
+              ls -la "${SOLR_DATA}/configsets/" 2>/dev/null || echo "  (none)"
+              echo ""
               echo "=== Migration init container complete ==="
           securityContext:
             runAsUser: 0
@@ -184,6 +326,7 @@ spec:
               readOnly: true
         {{- end }}
         # Init container to set up custom configset before Solr starts
+        # If migration copied Bitnami config, this will skip and just verify permissions
         - name: init-configset
           image: "{{ .Values.solr.image.registry }}/{{ .Values.solr.image.repository }}:{{ .Values.solr.image.tag }}"
           imagePullPolicy: {{ .Values.solr.image.pullPolicy | default "IfNotPresent" }}
@@ -196,11 +339,57 @@ spec:
               CONF_DIR="${CONFIGSET_DIR}/conf"
               LANG_DIR="${CONF_DIR}/lang"
               
+              echo "=== Configset Initialization ==="
+              
+              # Check if full migration was completed from Bitnami
+              if [ -f "/var/solr/data/.migration_complete" ]; then
+                echo "Full Bitnami migration was completed"
+                cat "/var/solr/data/.migration_complete"
+                echo ""
+              fi
+              
+              # Check if configuration was already migrated from Bitnami
+              if [ -f "${CONFIGSET_DIR}/.migrated" ]; then
+                echo "Configuration was migrated from Bitnami - skipping ConfigMap copy"
+                cat "${CONFIGSET_DIR}/.migrated"
+                echo ""
+                echo "Using migrated configuration:"
+                ls -la "${CONF_DIR}/" 2>/dev/null || echo "  (conf dir not found)"
+                
+                # Just ensure permissions are correct
+                echo "Verifying permissions..."
+                chown -R 8983:8983 "${CONFIGSET_DIR}"
+                chmod -R 775 "${CONFIGSET_DIR}"
+                if [ -f "${CONF_DIR}/managed-schema" ]; then
+                  chmod 664 "${CONF_DIR}/managed-schema"
+                fi
+                
+                echo "Configset initialization complete (using migrated config)"
+                exit 0
+              fi
+              
+              # Check if configset already has a valid schema (from previous run)
+              if [ -f "${CONF_DIR}/managed-schema" ] && [ -f "${CONF_DIR}/solrconfig.xml" ]; then
+                echo "Configset already exists with schema and config - skipping copy"
+                ls -la "${CONF_DIR}/"
+                
+                # Just ensure permissions are correct
+                echo "Verifying permissions..."
+                chown -R 8983:8983 "${CONFIGSET_DIR}"
+                chmod -R 775 "${CONFIGSET_DIR}"
+                chmod 664 "${CONF_DIR}/managed-schema"
+                
+                echo "Configset initialization complete (using existing config)"
+                exit 0
+              fi
+              
+              # No existing config - copy from ConfigMap (fresh install)
+              echo "No existing configuration found - copying from ConfigMap"
               echo "Creating custom configset directory: ${CONF_DIR}"
               mkdir -p "${CONF_DIR}"
               mkdir -p "${LANG_DIR}"
               
-              echo "Copying configuration files..."
+              echo "Copying configuration files from ConfigMap..."
               # Copy managed-schema (for ManagedIndexSchemaFactory)
               cp /tmp/solr-config/managed-schema "${CONF_DIR}/managed-schema"
               cp /tmp/solr-config/solrconfig.xml "${CONF_DIR}/"
@@ -215,7 +404,7 @@ spec:
               chmod -R 775 "${CONFIGSET_DIR}"
               chmod 664 "${CONF_DIR}/managed-schema"
               
-              echo "Configset initialization complete"
+              echo "Configset initialization complete (fresh install)"
               ls -la "${CONF_DIR}/"
               ls -la "${LANG_DIR}/"
           securityContext:
