@@ -380,10 +380,10 @@ solr:
     resources:
       limits:
         cpu: 2000m
-        memory: 4Gi
+        memory: 2Gi
       requests:
         cpu: 1000m
-        memory: 4Gi
+        memory: 2Gi
 
   ## Retain legacy port hints for helper templates that build service URLs
   service:
