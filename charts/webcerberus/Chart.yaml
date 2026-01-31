@@ -4,8 +4,4 @@ description: A Helm chart for Kubernetes
 name: webcerberus
 version: 10.5.9447
 
-
-dependencies:
-  - name: solr
-    version: 6.3.x
-    repository: https://charts.bitnami.com/bitnami
+## No external dependencies - Solr runs in standalone mode as a StatefulSet

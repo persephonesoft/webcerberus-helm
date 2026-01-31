@@ -78,8 +78,8 @@ persistence:
 ingresses:
   webcerberus:
     enabled: true
+    ingressClassName: nginx
     annotations:
-      kubernetes.io/ingress.class: "nginx"
       nginx.ingress.kubernetes.io/proxy-buffering: "on"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
       nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
@@ -318,77 +318,74 @@ solr:
   ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
   ##
   nameOverride: "solr"
+  ## @param createCore Automatically create the Solr core during deployment
+  ##
+  createCore: true
+  ## @param coreName Name of the Solr core to create
+  ##
+  coreName: persephone
+  ## @param replicas Number of Solr pods
+  ##
+  replicas: 1
 
-  ## Bitnami Solr image version
-  ## ref: https://hub.docker.com/r/bitnami/solr/tags
-  ## @param image.registry Solr image registry
+  ## Apache Solr container image
   ## @param image.repository Solr image repository
-  ## @param image.tag Solr image tag (immutable tags are recommended)
-  ## @param image.digest Solr image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
+  ## @param image.tag Solr image tag
   ## @param image.pullPolicy image pull policy
-  ## @param image.pullSecrets Specify docker-registry secret names as an array
-  ## @param image.debug Specify if debug values should be set
   ##
   image:
     registry: docker.io
-    repository: bitnami/solr
-    tag: 8.11.2-debian-11-r37
+    repository: library/solr
+    tag: 8.11.4
+    pullPolicy: IfNotPresent
 
-  auth:
-    ## @param auth.enabled Enable Solr authentication
-    ##
-    enabled: false
-  ## @param coreNames Solr core names to be created
+  ## @param addressability.podPort Solr HTTP port exposed by the Solr Operator services
+  ## @param addressability.commonServicePort Shared Solr service port, kept aligned with helper templates
   ##
-  coreNames:
-    - persephone
-  ## @param cloudEnabled Enable Solr cloud mode
-  ##
-  cloudEnabled: false
-  ## @param cloudBootstrap Enable cloud bootstrap. It will be performed from the node 0.
-  ##
-  cloudBootstrap: false
-  ## @param collectionShards Number of collection shards
-  ##
-  collectionShards: 1
-  ## @param collectionReplicas Number of collection replicas
-  ##
-  collectionReplicas: 1
-  ## @param replicaCount Number of solr replicas
-  ##
-  replicaCount: 1
-  ## @param solr.resource.limits/requests for the Persephone Solr service
-  ## The provided below limits/requests values are recomended for using with Webcerberus apllication containing 100M units of data.
-  ## One unit of data means one annotation or marker.
-  ##
+  addressability:
+    podPort: 8983
+    commonServicePort: 8983
 
-  ## @param containerPorts.http Solr HTTP container port
+  ## @param solrOptions.javaMemory Java heap settings propagated to the Solr pods
   ##
-  containerPorts:
-    http: 8983
+  solrOptions:
+    javaMemory: "-Xms2g -Xmx2g"
 
-  ## @section Traffic Exposure parameters
+  ## @section Storage parameters for SolrCloud
   ##
+  dataStorage:
+    type: persistent
+    capacity: "20Gi"
+    persistent:
+      reclaimPolicy: Delete
+      pvc:
+        storageClassName: ""
+
+  ## @section Migration from Bitnami Solr
+  ## Set migration.enabled=true and specify the existing Bitnami PVC name to migrate data
+  ##
+  migration:
+    enabled: true
+    ## @param migration.bitnamiPvcName Name of the existing Bitnami Solr PVC to migrate from
+    ## The PVC must exist in the same namespace
+    bitnamiPvcName: "data-my-release-solr-0"  # Your Bitnami PVC name
+    ## @param migration.debug Enable debug mode - pauses migration to allow exec into container
+    debug: true
+    ## @param migration.debugSleepSeconds How long to sleep in debug mode (default 3600 = 1 hour)
+    debugSleepSeconds: 30
+
+  ## @section Solr pod runtime parameters
+  ##
+  podOptions:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 4Gi
+
+  ## Retain legacy port hints for helper templates that build service URLs
   service:
-    ## @param service.ports.http Solr HTTP service port
-    ##
     ports:
       http: 8983
-
-  resources:
-    limits:
-      cpu: 2000m
-      memory: 2048Mi
-    requests:
-      cpu: 1000m
-      memory: 2048Mi
-
-  zookeeper:
-    ## @param zookeeper.enabled Enable ZooKeeper deployment. Needed for Solr cloud
-    ##
-    enabled: false
-
-    ## @param zookeeper.replicaCount Number of ZooKeeper nodes
-    ##
-    replicaCount: 1
-
