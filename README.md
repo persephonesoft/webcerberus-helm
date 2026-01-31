@@ -5,7 +5,11 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 9.1.8921 (the latest version)
+ - 10.5.9447 (the latest version)
+	- **Breaking Change**: Replaced Bitnami Solr with official Apache Solr image (vendor-lock avoidance)
+	- Changed `.Values.solr` section structure - see `values.yaml` for new configuration options
+	- Built-in migration procedure from Bitnami Solr to standalone Solr (see "Migrating from Bitnami Solr" section)
+ - 9.1.8921
 	- Remove "email" login provider
  - 9.1.8915 
 	- New Feature: Variant distances for region
