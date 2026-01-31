@@ -66,11 +66,13 @@ spec:
               BITNAMI_SOLR_HOME="/bitnami-solr/server/solr"
               SOLR_DATA="/var/solr/data"
               CORE_NAME="{{ .Values.solr.coreName }}"
+              MIGRATION_FLAG=".migrated"
               
               echo "=== Bitnami Solr Full Data Migration ==="
               echo "Source (Bitnami): ${BITNAMI_SOLR_HOME}"
               echo "Target (Community Solr): ${SOLR_DATA}"
               echo "Main core: ${CORE_NAME}"
+              echo "Migration flag file: ${MIGRATION_FLAG}"
               
               {{- if .Values.solr.migration.debug }}
               # Debug mode - list contents for troubleshooting
@@ -87,6 +89,15 @@ spec:
               echo ""
               echo "=== Bitnami configsets ==="
               ls -laR "${BITNAMI_SOLR_HOME}/configsets/" 2>/dev/null | head -50 || echo "  (not found)"
+              echo ""
+              echo "=== Sample core.properties files ==="
+              for f in "${BITNAMI_SOLR_HOME}"/u*/core.properties; do
+                if [ -f "$f" ]; then
+                  echo "--- $f ---"
+                  cat "$f"
+                  echo ""
+                fi
+              done 2>/dev/null | head -50
               echo ""
               echo "=== /var/solr/data contents ==="
               ls -laR /var/solr/data/ 2>/dev/null | head -50 || echo "  (not accessible)"
@@ -105,73 +116,110 @@ spec:
                 return 1
               }
               
+              # Function to get configSet value from core.properties
+              get_configset_from_properties() {
+                local props_file="$1"
+                if [ -f "${props_file}" ]; then
+                  grep -E "^configSet=" "${props_file}" 2>/dev/null | cut -d'=' -f2 | tr -d '[:space:]'
+                fi
+              }
+              
+              # Function to create migration flag file
+              create_migration_flag() {
+                local target_dir="$1"
+                local core_name="$2"
+                echo "migrated=true" > "${target_dir}/${MIGRATION_FLAG}"
+                echo "source_core=${core_name}" >> "${target_dir}/${MIGRATION_FLAG}"
+                echo "migration_date=$(date -Iseconds)" >> "${target_dir}/${MIGRATION_FLAG}"
+                chown 8983:8983 "${target_dir}/${MIGRATION_FLAG}"
+              }
+              
               # Function to migrate a single core
-              # Handles both conf/ subdirectory and flat config files in core root
+              # Reads core.properties to determine if it uses a configSet or embedded config
               migrate_core() {
                 local src_core_dir="$1"
                 local core_name="$2"
                 local target_core_dir="${SOLR_DATA}/${core_name}"
                 local src_index_dir="${src_core_dir}/data/index"
-                local target_index_dir="${target_core_dir}/data/index"
+                local src_props="${src_core_dir}/core.properties"
                 
                 echo ""
-                echo "--- Migrating core: ${core_name} ---"
+                echo "--- Processing core: ${core_name} ---"
+                
+                # Check if target already has migration flag - skip if exists
+                if [ -f "${target_core_dir}/${MIGRATION_FLAG}" ]; then
+                  echo "  Migration flag found - already migrated, skipping"
+                  cat "${target_core_dir}/${MIGRATION_FLAG}" | sed 's/^/    /'
+                  return 0
+                fi
                 
                 # Check if source has index data
                 if [ ! -d "${src_index_dir}" ]; then
-                  echo "  No index directory - skipping"
+                  echo "  No index directory at ${src_index_dir} - skipping"
                   return 0
                 fi
                 
                 if ! has_index_data "${src_index_dir}"; then
-                  echo "  No Lucene index data - skipping"
+                  echo "  No Lucene index data found - skipping"
                   return 0
                 fi
                 
-                # Check if target already has data
-                if has_index_data "${target_index_dir}"; then
-                  echo "  Target already has data - skipping"
-                  return 0
+                echo "  ✓ Source has Lucene index data - proceeding with migration"
+                
+                # Read source core.properties to determine config mode
+                local src_configset=""
+                if [ -f "${src_props}" ]; then
+                  src_configset=$(get_configset_from_properties "${src_props}")
+                  echo "  Source core.properties:"
+                  cat "${src_props}" | sed 's/^/    /'
                 fi
                 
-                echo "  ✓ Source has index data, target is empty - migrating"
-                
-                # Remove any empty structure
+                # Remove any existing target directory (will be recreated)
                 if [ -d "${target_core_dir}" ]; then
+                  echo "  Removing existing target directory..."
                   rm -rf "${target_core_dir}"
                 fi
                 
                 # Create target directory structure
                 mkdir -p "${target_core_dir}/data"
                 
-                # Copy data directories
+                # Copy data directories (index, tlog, snapshot_metadata)
+                echo "  Copying data..."
                 if [ -d "${src_core_dir}/data/index" ]; then
-                  echo "    Copying index..."
+                  echo "    - index/"
                   cp -r "${src_core_dir}/data/index" "${target_core_dir}/data/"
                 fi
                 if [ -d "${src_core_dir}/data/tlog" ]; then
-                  echo "    Copying tlog..."
+                  echo "    - tlog/"
                   cp -r "${src_core_dir}/data/tlog" "${target_core_dir}/data/"
                 fi
                 if [ -d "${src_core_dir}/data/snapshot_metadata" ]; then
-                  echo "    Copying snapshot_metadata..."
+                  echo "    - snapshot_metadata/"
                   cp -r "${src_core_dir}/data/snapshot_metadata" "${target_core_dir}/data/"
                 fi
                 
-                # Handle configuration - two patterns exist in Bitnami:
-                # Pattern 1: conf/ subdirectory (traditional)
-                # Pattern 2: flat config files in core root (user cores)
-                
-                if [ -d "${src_core_dir}/conf" ]; then
-                  # Pattern 1: conf/ subdirectory - copy to configset
-                  echo "    Found conf/ directory - copying to configset"
+                # Determine configuration mode based on source core.properties
+                if [ -n "${src_configset}" ]; then
+                  # Core uses a configSet - preserve this reference
+                  echo "  Config mode: uses configSet '${src_configset}'"
+                  cat > "${target_core_dir}/core.properties" << COREPROPS
+              name=${core_name}
+              configSet=${src_configset}
+              dataDir=data
+              COREPROPS
+                  
+                elif [ -d "${src_core_dir}/conf" ]; then
+                  # Core has conf/ subdirectory - copy to core's own configset
+                  echo "  Config mode: has conf/ directory - creating configset"
                   local configset_dir="${SOLR_DATA}/configsets/${core_name}/conf"
                   mkdir -p "${configset_dir}"
                   cp -r "${src_core_dir}/conf/"* "${configset_dir}/" 2>/dev/null || true
+                  
+                  # Create configset migration flag
+                  create_migration_flag "${SOLR_DATA}/configsets/${core_name}" "${core_name}"
                   chown -R 8983:8983 "${SOLR_DATA}/configsets/${core_name}"
                   chmod -R 775 "${SOLR_DATA}/configsets/${core_name}"
                   
-                  # Create core.properties pointing to configset
                   cat > "${target_core_dir}/core.properties" << COREPROPS
               name=${core_name}
               configSet=${core_name}
@@ -179,33 +227,31 @@ spec:
               COREPROPS
                   
                 elif [ -f "${src_core_dir}/managed-schema" ] || [ -f "${src_core_dir}/solrconfig.xml" ]; then
-                  # Pattern 2: flat config files in core root (user cores)
-                  # Copy config files directly into the core directory
-                  echo "    Found flat config files - copying to core directory"
+                  # Core has flat config files in root - copy them directly
+                  echo "  Config mode: embedded flat config files"
                   
-                  # Copy each config file if it exists
                   for config_file in managed-schema solrconfig.xml synonyms.txt stopwords.txt protwords.txt stopwords_en.txt; do
                     if [ -f "${src_core_dir}/${config_file}" ]; then
-                      echo "      Copying ${config_file}"
+                      echo "    - ${config_file}"
                       cp "${src_core_dir}/${config_file}" "${target_core_dir}/"
                     fi
                   done
                   
                   # Copy lang/ directory if present
                   if [ -d "${src_core_dir}/lang" ]; then
-                    echo "      Copying lang/ directory"
+                    echo "    - lang/"
                     cp -r "${src_core_dir}/lang" "${target_core_dir}/"
                   fi
                   
-                  # Create core.properties WITHOUT configSet (uses local config)
+                  # No configSet - uses embedded config
                   cat > "${target_core_dir}/core.properties" << COREPROPS
               name=${core_name}
               dataDir=data
               COREPROPS
                   
                 else
-                  # No local config - use the main configset
-                  echo "    No local config - using ${CORE_NAME} configset"
+                  # No config found - default to main configset
+                  echo "  Config mode: no local config - using default configSet '${CORE_NAME}'"
                   cat > "${target_core_dir}/core.properties" << COREPROPS
               name=${core_name}
               configSet=${CORE_NAME}
@@ -213,14 +259,58 @@ spec:
               COREPROPS
                 fi
                 
-                # Remove leading whitespace from core.properties
+                # Clean up core.properties whitespace
                 sed -i 's/^[[:space:]]*//' "${target_core_dir}/core.properties"
+                
+                # Create migration flag for this core
+                create_migration_flag "${target_core_dir}" "${core_name}"
                 
                 # Set permissions
                 chown -R 8983:8983 "${target_core_dir}"
                 chmod -R 775 "${target_core_dir}"
                 
-                echo "    ✓ Core ${core_name} migrated successfully"
+                echo "  ✓ Core ${core_name} migrated successfully"
+                echo "  Target core.properties:"
+                cat "${target_core_dir}/core.properties" | sed 's/^/    /'
+                return 0
+              }
+              
+              # Function to migrate a configset
+              migrate_configset() {
+                local src_configset_dir="$1"
+                local configset_name="$2"
+                local target_configset_dir="${SOLR_DATA}/configsets/${configset_name}"
+                
+                echo ""
+                echo "--- Processing configset: ${configset_name} ---"
+                
+                # Check if target already has migration flag
+                if [ -f "${target_configset_dir}/${MIGRATION_FLAG}" ]; then
+                  echo "  Migration flag found - already migrated, skipping"
+                  cat "${target_configset_dir}/${MIGRATION_FLAG}" | sed 's/^/    /'
+                  return 0
+                fi
+                
+                # Check if source has conf/ directory
+                if [ ! -d "${src_configset_dir}/conf" ]; then
+                  echo "  No conf/ directory - skipping"
+                  return 0
+                fi
+                
+                echo "  Copying configset..."
+                mkdir -p "${target_configset_dir}"
+                cp -r "${src_configset_dir}/"* "${target_configset_dir}/" 2>/dev/null || true
+                
+                # Create migration flag
+                create_migration_flag "${target_configset_dir}" "${configset_name}"
+                
+                # Set permissions
+                chown -R 8983:8983 "${target_configset_dir}"
+                chmod -R 775 "${target_configset_dir}"
+                
+                echo "  ✓ Configset ${configset_name} migrated successfully"
+                echo "  Contents:"
+                ls -la "${target_configset_dir}/conf/" 2>/dev/null | head -10 | sed 's/^/    /'
                 return 0
               }
               
@@ -233,29 +323,19 @@ spec:
                 exit 0
               fi
               
-              # Check if migration marker exists (already migrated)
-              if [ -f "${SOLR_DATA}/.migration_complete" ]; then
-                echo "Migration marker found - migration already completed"
-                cat "${SOLR_DATA}/.migration_complete"
-                echo "Skipping migration"
-                exit 0
-              fi
-              
               echo ""
               echo "=== Step 1: Migrate configsets ==="
               if [ -d "${BITNAMI_SOLR_HOME}/configsets" ]; then
                 echo "Found Bitnami configsets directory"
                 mkdir -p "${SOLR_DATA}/configsets"
                 
-                # Copy all configsets except _default (we'll use our own)
+                # Copy all configsets except _default
                 for configset_dir in "${BITNAMI_SOLR_HOME}/configsets/"*/; do
-                  configset_name=$(basename "${configset_dir}")
-                  if [ "${configset_name}" != "_default" ] && [ -d "${configset_dir}conf" ]; then
-                    echo "  Copying configset: ${configset_name}"
-                    mkdir -p "${SOLR_DATA}/configsets/${configset_name}"
-                    cp -r "${configset_dir}"* "${SOLR_DATA}/configsets/${configset_name}/" 2>/dev/null || true
-                    chown -R 8983:8983 "${SOLR_DATA}/configsets/${configset_name}"
-                    chmod -R 775 "${SOLR_DATA}/configsets/${configset_name}"
+                  if [ -d "${configset_dir}" ]; then
+                    configset_name=$(basename "${configset_dir}")
+                    if [ "${configset_name}" != "_default" ]; then
+                      migrate_configset "${configset_dir}" "${configset_name}"
+                    fi
                   fi
                 done
               else
@@ -274,16 +354,21 @@ spec:
               echo ""
               echo "=== Step 3: Migrate user cores (uXXXXXX pattern) ==="
               USER_CORE_COUNT=0
+              SKIPPED_COUNT=0
               for core_dir in "${BITNAMI_SOLR_HOME}"/u[0-9]*/; do
                 if [ -d "${core_dir}" ]; then
                   core_name=$(basename "${core_dir}")
                   if [ -f "${core_dir}/core.properties" ]; then
+                    if [ -f "${SOLR_DATA}/${core_name}/${MIGRATION_FLAG}" ]; then
+                      SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+                    else
+                      USER_CORE_COUNT=$((USER_CORE_COUNT + 1))
+                    fi
                     migrate_core "${core_dir}" "${core_name}"
-                    USER_CORE_COUNT=$((USER_CORE_COUNT + 1))
                   fi
                 fi
               done
-              echo "Processed ${USER_CORE_COUNT} user cores"
+              echo "User cores: ${USER_CORE_COUNT} migrated, ${SKIPPED_COUNT} skipped (already migrated)"
               
               echo ""
               echo "=== Step 4: Migrate other named cores ==="
@@ -301,15 +386,12 @@ spec:
                 fi
               done
               
-              # Create migration marker
-              echo "migration_complete=true" > "${SOLR_DATA}/.migration_complete"
-              echo "migration_date=$(date -Iseconds)" >> "${SOLR_DATA}/.migration_complete"
-              echo "source=${BITNAMI_SOLR_HOME}" >> "${SOLR_DATA}/.migration_complete"
-              chown 8983:8983 "${SOLR_DATA}/.migration_complete"
-              
               echo ""
               echo "=== Migration Summary ==="
-              echo "Cores migrated:"
+              echo "Migrated cores (with ${MIGRATION_FLAG} flag):"
+              find "${SOLR_DATA}" -maxdepth 2 -name "${MIGRATION_FLAG}" -exec dirname {} \; 2>/dev/null | sort || true
+              echo ""
+              echo "Cores in target:"
               ls -la "${SOLR_DATA}/" | grep "^d" | grep -v configsets || true
               echo ""
               echo "Configsets available:"
