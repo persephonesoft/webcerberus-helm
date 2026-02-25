@@ -22,9 +22,31 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       restartPolicy: Never
+      {{- if .Values.solr.coreInitJob.securityContext.enabled }}
+      securityContext:
+        runAsNonRoot: {{ .Values.solr.coreInitJob.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.solr.coreInitJob.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.solr.coreInitJob.securityContext.runAsGroup }}
+      {{- end }}
       containers:
       - name: solr-core-init
         image: curlimages/curl:latest
+        {{- if .Values.solr.coreInitJob.securityContext.enabled }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.solr.coreInitJob.securityContext.allowPrivilegeEscalation }}
+          readOnlyRootFilesystem: {{ .Values.solr.coreInitJob.securityContext.readOnlyRootFilesystem | default false }}
+          {{- if .Values.solr.coreInitJob.securityContext.capabilities }}
+          capabilities:
+            {{- if .Values.solr.coreInitJob.securityContext.capabilities.drop }}
+            drop:
+              {{- toYaml .Values.solr.coreInitJob.securityContext.capabilities.drop | nindent 14 }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.solr.coreInitJob.resources }}
+        resources:
+          {{- toYaml .Values.solr.coreInitJob.resources | nindent 10 }}
+        {{- end }}
         command:
         - /bin/sh
         - -c

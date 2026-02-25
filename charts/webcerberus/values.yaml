@@ -318,12 +318,47 @@ solr:
   ## The 'nameOverride' value used as suffix for the Solr service name. The Solr service name is composed as string: .Value.fullnameOverride-.Value.solr.nameOverride
   ##
   nameOverride: "solr"
-  ## @param createCore Automatically create the Solr core during deployment
+  ## @param createCore Automatically create the Solr core during deployment using a Helm hook Job
   ##
   createCore: true
   ## @param coreName Name of the Solr core to create
   ##
   coreName: persephone
+
+  ## @section Solr ConfigMap parameters
+  ## @param configMap.enabled Enable rendering of the Solr ConfigMap (independent of createCore)
+  ## When false, you must provide your own ConfigMap named {{ fullname }}-solr-config
+  ##
+  configMap:
+    enabled: true
+
+  ## @section Core initialization Job parameters
+  ## Security context and resources for the Solr core initialization Job (Helm hook)
+  ##
+  coreInitJob:
+    ## @param coreInitJob.securityContext Security context for the core init Job container
+    ## Required for restricted Kubernetes policies
+    ##
+    securityContext:
+      enabled: true
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    ## @param coreInitJob.resources CPU and memory requests/limits for the core init Job
+    ## Required for clusters with ResourceQuota enforcement
+    ##
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
   ## @param replicas Number of Solr pods
   ##
   replicas: 1
@@ -360,19 +395,6 @@ solr:
       reclaimPolicy: Delete
       pvc:
         storageClassName: ""
-
-  ## @section Migration from Bitnami Solr
-  ## Set migration.enabled=true and specify the existing Bitnami PVC name to migrate data
-  ##
-  migration:
-    enabled: true
-    ## @param migration.bitnamiPvcName Name of the existing Bitnami Solr PVC to migrate from
-    ## The PVC must exist in the same namespace
-    bitnamiPvcName: "data-my-release-solr-0"  # Your Bitnami PVC name
-    ## @param migration.debug Enable debug mode - pauses migration to allow exec into container
-    debug: true
-    ## @param migration.debugSleepSeconds How long to sleep in debug mode (default 3600 = 1 hour)
-    debugSleepSeconds: 30
 
   ## @section Solr pod runtime parameters
   ##
