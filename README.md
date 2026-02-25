@@ -5,10 +5,13 @@
 This Helm Chart has been configured to pull the Container Images from the Docker Hub Public Repository.
 
 A set of Webcerberus versions available for deploying on Kubernetes is:
- - 10.5.9447 (the latest version)
-	- **Breaking Change**: Replaced Bitnami Solr with official Apache Solr image (vendor-lock avoidance)
+ - 11.1.9543 (the latest version)
+	- Replaced Bitnami Solr with official Apache Solr image (vendor-lock avoidance)
 	- Changed `.Values.solr` section structure - see `values.yaml` for new configuration options
-	- Built-in migration procedure from Bitnami Solr to standalone Solr (see "Migrating from Bitnami Solr" section)
+	- Added configurable security context and resources for Solr core initialization Job
+	- Solr ConfigMap rendering decoupled from core creation
+ - 10.5.9447
+	- **Breaking Change**: Replaced Bitnami Solr with official Apache Solr image
  - 9.1.8921
 	- Remove "email" login provider
  - 9.1.8915 
@@ -311,297 +314,7 @@ By default the `containerSecurityContext` is disabled: `volumePermissions.contai
 
 If the Kubernetes PodSecurityPolicy/PodSecurity Admission denies running containers under the root user the application's persistent volumes should be recreated.
 
-## Migrating from Bitnami Solr to Standalone Solr Service
-
-This chart has migrated from using the Bitnami Solr Helm chart to a standalone Solr service deployment. This section describes the changes and provides instructions for migrating existing data.
-
-### Why the Change?
-
-The primary motivation for this migration is **vendor-lock avoidance**. By switching from the Bitnami-packaged Solr to the official Apache Solr image, we gain:
-
-- **No vendor dependency** - Using the official `library/solr` image from Docker Hub ensures long-term support and compatibility with upstream Solr releases
-- **Standard directory layout** - The official Solr image uses the standard `/var/solr/data/` path, making it easier to follow official documentation and community resources
-- **Simplified deployment** - No ZooKeeper dependency required for standalone mode
-- **Direct control** - Full control over Solr configuration, schema, and configsets
-- **Custom configset support** - WebCerberus-specific field types (`text_names`, `text_en`) with managed schema support
-
-### Key Differences
-
-| Aspect | Bitnami Solr | Standalone Solr (Official) |
-|--------|--------------|----------------------------|
-| Image | `bitnami/solr` | `library/solr` (official Apache) |
-| Data Path | `/bitnami/solr/server/solr/` | `/var/solr/data/` |
-| PVC Name | `data-<release>-solr-0` | `solr-data-<release>-solr-0` |
-| Schema | Default managed schema | Custom schema with WebCerberus field types |
-| User ID | 1001 | 8983 |
-| Configsets | `/bitnami/solr/server/solr/configsets/` | `/var/solr/data/configsets/` |
-
-### Data Migration Process
-
-The chart includes a built-in migration feature that copies Solr index data, configurations, and configsets from an existing Bitnami Solr PVC to the new standalone Solr PVC.
-
-#### What Gets Migrated
-
-The migration init container handles:
-
-1. **Configsets** - All configsets from `/bitnami-solr/server/solr/configsets/` (except `_default`)
-2. **Main core** - The primary core (e.g., `persephone`) with its data and configuration
-3. **User cores** - All user-specific cores matching the pattern `uXXXXXX` (e.g., `u014154`, `u002296`)
-4. **Other named cores** - Any additional cores found in the Bitnami Solr home
-
-#### Configuration Detection
-
-For each core, the migration script reads the source `core.properties` file to determine the configuration mode:
-
-- **ConfigSet reference** - If `configSet=<name>` is defined, the core references a shared configset
-- **Embedded conf/ directory** - If the core has a `conf/` subdirectory, it's copied as a new configset
-- **Flat config files** - If config files (`managed-schema`, `solrconfig.xml`) exist in the core root, they're copied directly
-- **No local config** - Falls back to the main core's configset
-
-### Migration Flag Files (`.migrated`)
-
-The migration uses per-directory flag files to track what has been migrated. This provides granular control over the migration process.
-
-#### How It Works
-
-After successfully migrating each core or configset, a `.migrated` flag file is created in the target directory:
-
-```
-/var/solr/data/persephone/.migrated        # Main core
-/var/solr/data/u014154/.migrated           # User core
-/var/solr/data/u002296/.migrated           # User core
-/var/solr/data/configsets/persephone/.migrated  # Configset
-```
-
-The flag file contains metadata about the migration:
-
-```properties
-migrated=true
-source_core=persephone
-migration_date=2026-01-31T10:30:00+00:00
-```
-
-#### Migration Behavior
-
-- **Skip if flag exists** - If a `.migrated` file is found in the target directory, that core/configset is skipped
-- **Migrate if no flag** - Only directories without the flag file are processed
-- **No recursive flags** - Flags are only created at the top level of each migrated directory (not in subdirectories)
-
-#### Re-Migrating Specific Directories
-
-To re-migrate a specific core or configset, simply delete its `.migrated` flag file:
-
-```console
-# Exec into the running Solr pod
-kubectl exec -it <pod-name> -n <namespace> -- /bin/bash
-
-# Remove the flag file for a specific core to allow re-migration
-rm /var/solr/data/u014154/.migrated
-
-# Or remove flag for a configset
-rm /var/solr/data/configsets/persephone/.migrated
-```
-
-On the next pod restart (with migration enabled), the init container will re-migrate only the directories without flag files.
-
-**Use cases for re-migration:**
-- Corrupted data in a specific core
-- Need to refresh configuration from Bitnami source
-- Testing migration changes on a single core
-
-#### Viewing Migration Status
-
-To see which directories have been migrated:
-
-```console
-# List all migration flags
-kubectl exec -it <pod-name> -n <namespace> -- find /var/solr/data -name ".migrated" -exec echo "=== {} ===" \; -exec cat {} \;
-
-# Or just list the migrated directories
-kubectl exec -it <pod-name> -n <namespace> -- find /var/solr/data -maxdepth 2 -name ".migrated" -exec dirname {} \;
-```
-
-### Prerequisites
-
-- The existing Bitnami Solr PVC must be in the same namespace
-- The PVC must be accessible (not bound to another running pod)
-
-### Step 1: Identify the Existing Bitnami PVC Name
-
-```console
-kubectl get pvc -n <namespace> | grep solr
-```
-
-Example output:
-```
-data-my-release-solr-0   Bound    pvc-xxxx   20Gi   RWO    standard   30d
-```
-
-The PVC name is `data-my-release-solr-0`.
-
-### Step 2: Stop the Old Bitnami Solr (if running)
-
-If you have an existing Bitnami Solr deployment, scale it down or delete it (keeping the PVC):
-
-```console
-# Scale down the StatefulSet
-kubectl scale statefulset <old-release>-solr --replicas=0 -n <namespace>
-
-# Or delete it (PVC will be retained by default)
-kubectl delete statefulset <old-release>-solr -n <namespace>
-```
-
-### Step 3: Deploy with Migration Enabled
-
-Configure the migration in your values file or via command line:
-
-**Using values.yaml:**
-```yaml
-solr:
-  createCore: true
-  coreName: persephone
-  migration:
-    enabled: true
-    bitnamiPvcName: "data-my-release-solr-0"  # Your existing Bitnami PVC name
-    debug: false  # Set to true for troubleshooting
-```
-
-**Using Helm command line:**
-```console
-helm upgrade my-release ./charts/webcerberus -n <namespace> \
-  --set solr.migration.enabled=true \
-  --set solr.migration.bitnamiPvcName=data-my-release-solr-0
-```
-
-### Step 4: Verify Migration
-
-Check the init container logs to verify the migration completed successfully:
-
-```console
-# Get the pod name
-kubectl get pods -n <namespace> | grep solr
-
-# Check the migration container logs
-kubectl logs <pod-name> -c migrate-bitnami-data -n <namespace>
-```
-
-Successful migration output:
-```
-=== Bitnami Solr Full Data Migration ===
-Source (Bitnami): /bitnami-solr/server/solr
-Target (Community Solr): /var/solr/data
-Main core: persephone
-Migration flag file: .migrated
-
-=== Step 1: Migrate configsets ===
---- Processing configset: persephone ---
-  Copying configset...
-  ✓ Configset persephone migrated successfully
-
-=== Step 2: Migrate main core (persephone) ===
---- Processing core: persephone ---
-  ✓ Source has Lucene index data - proceeding with migration
-  Config mode: uses configSet 'persephone'
-  ✓ Core persephone migrated successfully
-
-=== Step 3: Migrate user cores (uXXXXXX pattern) ===
---- Processing core: u014154 ---
-  ✓ Source has Lucene index data - proceeding with migration
-  Config mode: uses configSet 'persephone'
-  ✓ Core u014154 migrated successfully
-User cores: 15 migrated, 0 skipped (already migrated)
-
-=== Migration Summary ===
-Migrated cores (with .migrated flag):
-/var/solr/data/configsets/persephone
-/var/solr/data/persephone
-/var/solr/data/u014154
-...
-```
-
-### Step 5: (Optional) Keep Migration Enabled for Incremental Updates
-
-Unlike previous versions, you can keep migration enabled even after initial migration. The `.migrated` flag files ensure:
-
-- Already-migrated directories are skipped (fast startup)
-- New cores added to Bitnami will be migrated on next restart
-- You can selectively re-migrate by removing specific flag files
-
-To disable migration completely:
-
-```yaml
-solr:
-  migration:
-    enabled: false
-```
-
-### Troubleshooting Migration
-
-**Enable Debug Mode:**
-
-If migration is not working as expected, enable debug mode to pause the container and allow manual inspection:
-
-```yaml
-solr:
-  migration:
-    enabled: true
-    bitnamiPvcName: "data-my-release-solr-0"
-    debug: true
-    debugSleepSeconds: 3600  # Sleep for 1 hour
-```
-
-**Exec into the Container:**
-```console
-kubectl exec -it <pod-name> -c migrate-bitnami-data -n <namespace> -- /bin/bash
-
-# Inside the container, inspect the mount points:
-ls -la /bitnami-solr/server/solr/
-ls -la /bitnami-solr/server/solr/configsets/
-ls -la /var/solr/data/
-
-# Check a specific core's properties
-cat /bitnami-solr/server/solr/u014154/core.properties
-
-# View migration flags
-find /var/solr/data -name ".migrated" -exec cat {} \;
-```
-
-**Common Issues:**
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "No Bitnami data found" | PVC not mounted or wrong PVC name | Verify PVC name and that it exists |
-| "No index directory found" | Core has no data | Normal - empty cores are skipped |
-| Core skipped | `.migrated` flag exists | Remove the flag file to re-migrate |
-| "Migration flag found" | Already migrated | Expected behavior - use flag removal for re-migration |
-| ConfigSet not found | Core references missing configset | Ensure configsets are migrated first |
-
-**Re-migrate a Specific Core:**
-
-```console
-# Remove the flag file
-kubectl exec -it <pod-name> -n <namespace> -- rm /var/solr/data/u014154/.migrated
-
-# Restart the pod to trigger migration
-kubectl delete pod <pod-name> -n <namespace>
-```
-
-**Clean Restart (Full Re-migration):**
-
-If you need to restart the migration from scratch:
-
-```console
-# Delete the new Solr resources
-kubectl delete statefulset <release>-solr -n <namespace>
-kubectl delete pvc solr-data-<release>-solr-0 -n <namespace>
-
-# Redeploy with migration enabled
-helm upgrade <release> ./charts/webcerberus -n <namespace> \
-  --set solr.migration.enabled=true \
-  --set solr.migration.bitnamiPvcName=data-<old-release>-solr-0
-```
-
-### Solr Configuration Details
+## Solr Configuration
 
 The standalone Solr deployment includes:
 
@@ -621,18 +334,43 @@ The standalone Solr deployment includes:
   - `names`, `qual_values`, `qual_name` - Using `text_names` type
   - `description` - Using `text_en` type
 
-### Post-Migration Cleanup
+### Core Initialization Job
 
-After verifying the migration is successful and the application is working correctly:
+The chart includes a Helm hook Job that automatically creates the Solr core on install/upgrade. The Job supports configurable security context and resource limits for environments with strict Kubernetes policies:
 
-1. **Delete the old Bitnami Solr PVC** (optional, to free storage):
-   ```console
-   kubectl delete pvc data-<old-release>-solr-0 -n <namespace>
-   ```
+```yaml
+solr:
+  createCore: true
+  coreName: persephone
+  coreInitJob:
+    securityContext:
+      enabled: true
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+```
 
-2. **Remove migration configuration** from your values file (optional - safe to keep enabled)
+### ConfigMap Rendering
 
-3. **Update any CI/CD pipelines** to use the new Solr configuration
+The Solr ConfigMap can be rendered independently of core creation:
+
+```yaml
+solr:
+  configMap:
+    enabled: true   # Always render ConfigMap (default: true)
+  createCore: false # Disable hook Job if needed
+```
 
 ## Uninstalling the Chart
 
