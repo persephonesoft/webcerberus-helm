@@ -99,8 +99,10 @@ spec:
               
               echo "Setting permissions (writable for schema modifications)..."
               chown -R 8983:8983 "${CONFIGSET_DIR}"
-              chmod -R 775 "${CONFIGSET_DIR}"
+              chmod -R 777 "${CONFIGSET_DIR}"
               chmod 664 "${CONF_DIR}/managed-schema"
+              
+              mkdir "${CONF_DIR}/tmp"
               
               echo "Configset initialization complete (fresh install)"
               ls -la "${CONF_DIR}/"
