@@ -76,6 +76,8 @@ spec:
                 chown -R 8983:8983 "${CONFIGSET_DIR}"
                 chmod -R 775 "${CONFIGSET_DIR}"
                 chmod 664 "${CONF_DIR}/managed-schema"
+
+                mkdir -p "${CONF_DIR}/tmp2"
                 
                 echo "Configset initialization complete (using existing config)"
                 exit 0
@@ -102,7 +104,7 @@ spec:
               chmod -R 777 "${CONFIGSET_DIR}"
               chmod 664 "${CONF_DIR}/managed-schema"
               
-              mkdir "${CONF_DIR}/tmp"
+              mkdir -p "${CONF_DIR}/tmp"
               
               echo "Configset initialization complete (fresh install)"
               ls -la "${CONF_DIR}/"
