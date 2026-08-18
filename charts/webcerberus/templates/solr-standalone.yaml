@@ -60,7 +60,7 @@ spec:
             - -c
             - |
               set -e
-              CONFIGSET_DIR="/var/solr/data/configsets/_default"
+              CONFIGSET_DIR="/var/solr/data/configsets/{{ .Values.solr.coreName }}"
               CONF_DIR="${CONFIGSET_DIR}/conf"
               LANG_DIR="${CONF_DIR}/lang"
               
@@ -73,10 +73,10 @@ spec:
                 
                 # Just ensure permissions are correct
                 echo "Verifying permissions..."
-                chown -R 8983:8983 "${CONFIGSET_DIR}"
+                chown -R 8983:8983 "/var/solr/data/configsets/"
                 chmod -R 775 "${CONFIGSET_DIR}"
                 chmod 664 "${CONF_DIR}/managed-schema"
-
+                
                 echo "Configset initialization complete (using existing config)"
                 exit 0
               fi
@@ -98,8 +98,8 @@ spec:
               cp /tmp/solr-config/stopwords_en.txt "${LANG_DIR}/stopwords_en.txt"
               
               echo "Setting permissions (writable for schema modifications)..."
-              chown -R 8983:8983 "${CONFIGSET_DIR}"
-              chmod -R 777 "${CONFIGSET_DIR}"
+              chown -R 8983:8983 "$/var/solr/data/configsets/"
+              chmod -R 775 "${CONFIGSET_DIR}"
               chmod 664 "${CONF_DIR}/managed-schema"
               
               echo "Configset initialization complete (fresh install)"
