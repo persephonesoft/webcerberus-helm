@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 11.4.9740
+appVersion: 11.7.9811
 description: A Helm chart for Kubernetes
 name: webcerberus
-version: 11.4.9740
+version: 11.7.9811
 
 ## No external dependencies - Solr runs in standalone mode as a StatefulSet
